@@ -1,23 +1,225 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Long Text Form</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-<h2>Submit Long Text</h2>
+{% block title %}Extract Claims - Source Analyzer{% endblock %}
 
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Submit</button>
-</form>
+{% block extra_css %}
+<style>
+    .claims-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 2rem;
+    }
 
-{% if submitted_text %}
-    <hr>
-    <h3>Submitted Text</h3>
-    <pre>{{ submitted_text }}</pre>
-{% endif %}
+    .form-section {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        position: relative;
+    }
 
-</body>
-</html>
+    .form-section h2 {
+        margin-bottom: 1.5rem;
+        color: var(--text-primary);
+        font-size: 1.8rem;
+    }
+
+    /* Error messages */
+    .alert {
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        font-size: 1rem;
+        line-height: 1.5;
+    }
+
+    .alert-error {
+        background: rgba(239, 68, 68, 0.1);
+        border: 2px solid #ef4444;
+        color: #dc2626;
+    }
+
+    .errorlist {
+        list-style: none;
+        padding: 0;
+        margin: 0.5rem 0;
+        color: #dc2626;
+        font-size: 0.9rem;
+    }
+
+    .errorlist li {
+        background: rgba(220, 38, 38, 0.1);
+        padding: 0.5rem;
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+    }
+
+    .text-input-wrapper {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+    .text-input-wrapper label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .text-input-wrapper textarea {
+        width: 100%;
+        min-height: 300px;
+        padding: 1.5rem;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 1rem;
+        line-height: 1.6;
+        resize: vertical;
+        background: 
+            linear-gradient(90deg, rgba(200, 200, 255, 0.1) 1px, transparent 1px),
+            linear-gradient(rgba(200, 200, 255, 0.1) 1px, transparent 1px);
+        background-size: 20px 20px;
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        transition: all 0.3s ease;
+    }
+
+    .text-input-wrapper textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .submit-btn {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+    }
+
+    .submit-btn:active {
+        transform: translateY(0);
+    }
+
+    .submit-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Loading state */
+    .loading {
+        display: none;
+        text-align: center;
+        margin: 2rem 0;
+    }
+
+    .loading.active {
+        display: block;
+    }
+
+    .spinner {
+        border: 4px solid rgba(99, 102, 241, 0.1);
+        border-top: 4px solid #6366f1;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Help text */
+    .helptext {
+        display: block;
+        margin-top: 0.5rem;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .claims-container {
+            padding: 1rem;
+        }
+        
+        .form-section {
+            padding: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="claims-container">
+    <div class="form-section">
+        <h2>📝 Extract Claims from Text</h2>
+        
+        <!-- Error Message -->
+        {% if error_message %}
+        <div class="alert alert-error">
+            {{ error_message }}
+        </div>
+        {% endif %}
+        
+        <form method="post" id="claimsForm">
+            {% csrf_token %}
+            
+            <div class="text-input-wrapper">
+                {{ form.content.errors }}
+                {{ form.content.label_tag }}
+                {{ form.content }}
+                {% if form.content.help_text %}
+                    <span class="helptext">{{ form.content.help_text }}</span>
+                {% endif %}
+            </div>
+            
+            <button type="submit" class="submit-btn" id="submitBtn">
+                🔍 Extract Claims
+            </button>
+        </form>
+
+        <div class="loading" id="loadingIndicator">
+            <div class="spinner"></div>
+            <p>Analyzing text and extracting claims...</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('claimsForm').addEventListener('submit', function(e) {
+        // Show loading indicator
+        document.getElementById('loadingIndicator').classList.add('active');
+        
+        // Disable submit button
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ Processing...';
+        
+        // Add animation to text area
+        const textInput = document.querySelector('textarea');
+        textInput.style.pointerEvents = 'none';
+        textInput.style.opacity = '0.6';
+    });
+</script>
+{% endblock %}
