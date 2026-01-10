@@ -1,117 +1,875 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Dashboard - Home{% endblock %}
+{% block title %}FactCheck AI - Autonomous News Verification System{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<style>
+    :root {
+        --terminal-green: #00ff41;
+        --terminal-blue: #00d4ff;
+        --terminal-purple: #bd93f9;
+        --terminal-pink: #ff79c6;
+        --terminal-yellow: #f1fa8c;
+        --terminal-orange: #ffb86c;
+        --dark-bg: #0a0e27;
+        --darker-bg: #050810;
+        --card-bg: rgba(15, 23, 42, 0.9);
+        --border-color: rgba(0, 255, 65, 0.3);
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        background: var(--dark-bg);
+        color: var(--terminal-green);
+        font-family: 'Courier New', monospace;
+        overflow-x: hidden;
+    }
+
+    /* Animated Background */
+    .particles-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        background: 
+            radial-gradient(ellipse at top, rgba(0, 255, 65, 0.05) 0%, transparent 50%),
+            radial-gradient(ellipse at bottom, rgba(0, 212, 255, 0.05) 0%, transparent 50%);
+    }
+
+    .particle {
+        position: absolute;
+        width: 2px;
+        height: 2px;
+        background: var(--terminal-green);
+        opacity: 0.3;
+        animation: float 20s infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0); }
+        25% { transform: translate(100px, -100px); }
+        50% { transform: translate(-50px, -200px); }
+        75% { transform: translate(-100px, -50px); }
+    }
+
+    /* Main Container */
+    .landing-container {
+        position: relative;
+        z-index: 1;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    /* Hero Section */
+    .hero-section {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        position: relative;
+    }
+
+    .terminal-window {
+        width: 100%;
+        max-width: 900px;
+        background: var(--card-bg);
+        border: 2px solid var(--terminal-green);
+        border-radius: 8px;
+        box-shadow: 
+            0 0 20px rgba(0, 255, 65, 0.3),
+            0 0 40px rgba(0, 255, 65, 0.1),
+            inset 0 0 60px rgba(0, 255, 65, 0.05);
+        overflow: hidden;
+        animation: glow-pulse 3s infinite;
+    }
+
+    @keyframes glow-pulse {
+        0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 65, 0.3), 0 0 40px rgba(0, 255, 65, 0.1); }
+        50% { box-shadow: 0 0 30px rgba(0, 255, 65, 0.5), 0 0 60px rgba(0, 255, 65, 0.2); }
+    }
+
+    .terminal-header {
+        background: rgba(0, 255, 65, 0.1);
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .terminal-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--terminal-green);
+        box-shadow: 0 0 10px var(--terminal-green);
+    }
+
+    .terminal-dot:nth-child(2) {
+        background: var(--terminal-yellow);
+        box-shadow: 0 0 10px var(--terminal-yellow);
+    }
+
+    .terminal-dot:nth-child(3) {
+        background: var(--terminal-pink);
+        box-shadow: 0 0 10px var(--terminal-pink);
+    }
+
+    .terminal-body {
+        padding: 2rem;
+        font-size: 0.95rem;
+        line-height: 1.8;
+    }
+
+    .typing-text {
+        overflow: hidden;
+        border-right: 2px solid var(--terminal-green);
+        white-space: nowrap;
+        animation: typing 3s steps(40) 1s both, blink 0.75s step-end infinite;
+    }
+
+    @keyframes typing {
+        from { width: 0; }
+        to { width: 100%; }
+    }
+
+    @keyframes blink {
+        50% { border-color: transparent; }
+    }
+
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 700;
+        margin: 2rem 0 1rem;
+        background: linear-gradient(135deg, var(--terminal-green), var(--terminal-blue));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 0 30px rgba(0, 255, 65, 0.5);
+        animation: title-glow 2s ease-in-out infinite;
+    }
+
+    @keyframes title-glow {
+        0%, 100% { filter: brightness(1); }
+        50% { filter: brightness(1.3); }
+    }
+
+    .hero-subtitle {
+        font-size: 1.3rem;
+        color: var(--terminal-blue);
+        margin-bottom: 3rem;
+        text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+    }
+
+    .command-line {
+        color: var(--terminal-green);
+        margin: 0.5rem 0;
+    }
+
+    .command-prompt {
+        color: var(--terminal-blue);
+        font-weight: bold;
+    }
+
+    .command-output {
+        color: var(--terminal-purple);
+        margin-left: 2rem;
+    }
+
+    /* Problem Section */
+    .section {
+        margin: 8rem 0;
+        position: relative;
+    }
+
+    .section-title {
+        font-size: 2.5rem;
+        color: var(--terminal-green);
+        margin-bottom: 2rem;
+        text-align: center;
+        position: relative;
+        padding-bottom: 1rem;
+    }
+
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100px;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--terminal-green), transparent);
+        box-shadow: 0 0 10px var(--terminal-green);
+    }
+
+    .problem-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+
+    .problem-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 2rem;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .problem-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--terminal-green), var(--terminal-blue));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .problem-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--terminal-green);
+        box-shadow: 0 10px 30px rgba(0, 255, 65, 0.2);
+    }
+
+    .problem-card:hover::before {
+        opacity: 1;
+    }
+
+    .problem-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        filter: drop-shadow(0 0 10px currentColor);
+    }
+
+    .problem-title {
+        font-size: 1.5rem;
+        color: var(--terminal-blue);
+        margin-bottom: 1rem;
+    }
+
+    .problem-text {
+        color: rgba(0, 255, 65, 0.8);
+        line-height: 1.6;
+    }
+
+    /* Architecture Section */
+    .architecture-flow {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        margin: 3rem 0;
+    }
+
+    .flow-step {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 2rem;
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .flow-step:hover {
+        border-color: var(--terminal-green);
+        box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+        transform: scale(1.02);
+    }
+
+    .step-number {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--terminal-green), var(--terminal-blue));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: var(--darker-bg);
+        flex-shrink: 0;
+        box-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
+    }
+
+    .step-content h3 {
+        color: var(--terminal-blue);
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .step-content p {
+        color: rgba(0, 255, 65, 0.8);
+        line-height: 1.6;
+    }
+
+    .step-arrow {
+        text-align: center;
+        color: var(--terminal-green);
+        font-size: 2rem;
+        animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(10px); }
+    }
+
+    /* Features Grid */
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        margin: 3rem 0;
+    }
+
+    .feature-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(0, 255, 65, 0.1) 0%, transparent 70%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .feature-card:hover::before {
+        opacity: 1;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-10px) rotate(1deg);
+        border-color: var(--terminal-green);
+        box-shadow: 0 15px 40px rgba(0, 255, 65, 0.3);
+    }
+
+    .feature-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        animation: float-icon 3s ease-in-out infinite;
+    }
+
+    @keyframes float-icon {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    .feature-title {
+        font-size: 1.3rem;
+        color: var(--terminal-blue);
+        margin-bottom: 1rem;
+    }
+
+    .feature-description {
+        color: rgba(0, 255, 65, 0.8);
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    /* Stats Section */
+    .stats-section {
+        background: var(--card-bg);
+        border: 2px solid var(--terminal-green);
+        border-radius: 12px;
+        padding: 3rem;
+        margin: 4rem 0;
+        box-shadow: 0 0 30px rgba(0, 255, 65, 0.2);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 3rem;
+        text-align: center;
+    }
+
+    .stat-item {
+        position: relative;
+    }
+
+    .stat-number {
+        font-size: 3.5rem;
+        font-weight: bold;
+        color: var(--terminal-green);
+        text-shadow: 0 0 20px var(--terminal-green);
+        animation: count-up 2s ease-out;
+    }
+
+    @keyframes count-up {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .stat-label {
+        color: var(--terminal-blue);
+        font-size: 1.1rem;
+        margin-top: 0.5rem;
+    }
+
+    /* CTA Section */
+    .cta-section {
+        text-align: center;
+        margin: 8rem 0;
+        padding: 4rem 2rem;
+        background: var(--card-bg);
+        border: 2px solid var(--terminal-green);
+        border-radius: 12px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cta-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(0, 255, 65, 0.1) 0%, transparent 50%);
+        animation: rotate-gradient 10s linear infinite;
+    }
+
+    @keyframes rotate-gradient {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .cta-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .cta-title {
+        font-size: 2.5rem;
+        color: var(--terminal-green);
+        margin-bottom: 1rem;
+        text-shadow: 0 0 20px var(--terminal-green);
+    }
+
+    .cta-subtitle {
+        font-size: 1.2rem;
+        color: var(--terminal-blue);
+        margin-bottom: 2rem;
+    }
+
+    .cta-buttons {
+        display: flex;
+        gap: 2rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .cta-button {
+        padding: 1.2rem 3rem;
+        font-size: 1.1rem;
+        font-weight: bold;
+        font-family: 'Courier New', monospace;
+        border: 2px solid var(--terminal-green);
+        border-radius: 8px;
+        background: transparent;
+        color: var(--terminal-green);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cta-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: var(--terminal-green);
+        transition: left 0.3s ease;
+        z-index: -1;
+    }
+
+    .cta-button:hover::before {
+        left: 0;
+    }
+
+    .cta-button:hover {
+        color: var(--darker-bg);
+        box-shadow: 0 0 20px var(--terminal-green);
+        transform: translateY(-3px);
+    }
+
+    .cta-button.secondary {
+        border-color: var(--terminal-blue);
+        color: var(--terminal-blue);
+    }
+
+    .cta-button.secondary::before {
+        background: var(--terminal-blue);
+    }
+
+    /* Scroll Indicator */
+    .scroll-indicator {
+        position: fixed;
+        bottom: 2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        animation: bounce 2s infinite;
+        color: var(--terminal-green);
+        font-size: 2rem;
+        opacity: 0.6;
+        z-index: 10;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.5rem;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+        }
+
+        .section-title {
+            font-size: 2rem;
+        }
+
+        .problem-grid,
+        .features-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .flow-step {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .cta-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .cta-button {
+            width: 100%;
+            max-width: 300px;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<!-- Animated Background -->
+<div class="particles-bg" id="particles"></div>
+
+<div class="landing-container">
     <!-- Hero Section -->
     <section class="hero-section">
-        <div class="hero-content">
-            <h1 class="hero-title">
-                <span class="title-line">STRENGTHS</span>
-            </h1>
-            <div class="hero-bars">
-                <div class="bar" style="width: 85%;"></div>
-                <div class="bar" style="width: 70%;"></div>
-                <div class="bar" style="width: 78%;"></div>
-                <div class="bar" style="width: 92%;"></div>
+        <div class="terminal-window">
+            <div class="terminal-header">
+                <div class="terminal-dot"></div>
+                <div class="terminal-dot"></div>
+                <div class="terminal-dot"></div>
+                <span style="margin-left: 1rem; color: var(--terminal-green); font-size: 0.9rem;">factcheck-ai@system:~</span>
+            </div>
+            <div class="terminal-body">
+                <div class="command-line">
+                    <span class="command-prompt">$</span> ./initialize_system.sh
+                </div>
+                <div class="command-output">
+                    > Loading AI-Powered News Verification System...
+                </div>
+                <div class="command-output">
+                    > Initializing Multi-Agent Architecture...
+                </div>
+                <div class="command-output">
+                    > Status: <span style="color: var(--terminal-green);">OPERATIONAL</span>
+                </div>
+                <div class="command-line" style="margin-top: 1rem;">
+                    <span class="command-prompt">$</span> <span class="typing-text">System Ready. Truth Verification Active.</span>
+                </div>
+            </div>
+        </div>
+
+        <h1 class="hero-title">FactCheck AI</h1>
+        <p class="hero-subtitle">Autonomous News Verification Through Claim-Level Analysis</p>
+
+        <div class="scroll-indicator">↓</div>
+    </section>
+
+    <!-- Problem Statement -->
+    <section class="section">
+        <h2 class="section-title">&lt; THE PROBLEM /&gt;</h2>
+        
+        <div class="problem-grid">
+            <div class="problem-card">
+                <div class="problem-icon">⚡</div>
+                <h3 class="problem-title">Information Overload</h3>
+                <p class="problem-text">
+                    Digital news produces thousands of claims daily. Manual fact-checking cannot keep pace with the exponential growth of content across articles, transcripts, and social media.
+                </p>
+            </div>
+
+            <div class="problem-card">
+                <div class="problem-icon">🔍</div>
+                <h3 class="problem-title">Document-Level Analysis Fails</h3>
+                <p class="problem-text">
+                    Current tools analyze entire articles as single units. They miss the core verification unit: individual factual claims hidden within complex narratives.
+                </p>
+            </div>
+
+            <div class="problem-card">
+                <div class="problem-icon">🌐</div>
+                <h3 class="problem-title">Language Variability</h3>
+                <p class="problem-text">
+                    The same fact appears in countless phrasings across sources. Without normalization, automated systems cannot detect duplicates, contradictions, or biased framing.
+                </p>
+            </div>
+
+            <div class="problem-card">
+                <div class="problem-icon">⏱️</div>
+                <h3 class="problem-title">Speed vs. Accuracy</h3>
+                <p class="problem-text">
+                    Misinformation spreads faster than fact-checkers can respond. By the time manual verification completes, false narratives have already shaped public opinion.
+                </p>
+            </div>
+
+            <div class="problem-card">
+                <div class="problem-icon">❌</div>
+                <h3 class="problem-title">Lack of Traceability</h3>
+                <p class="problem-text">
+                    Existing fact-checking tools provide final verdicts without showing how conclusions were reached. Journalists need transparent, auditable verification paths.
+                </p>
+            </div>
+
+            <div class="problem-card">
+                <div class="problem-icon">📊</div>
+                <h3 class="problem-title">No Cross-Source Comparison</h3>
+                <p class="problem-text">
+                    Claims repeat across outlets with subtle variations. Without structured comparison, contradictions and evolving narratives go undetected until damage is done.
+                </p>
             </div>
         </div>
     </section>
 
-    <!-- Stats Grid -->
-    <section class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-icon">📊</div>
-            <h3 class="stat-title">Projects</h3>
-            <p class="stat-value">24</p>
-            <p class="stat-change positive">+12%</p>
-        </div>
+    <!-- Solution Overview -->
+    <section class="section">
+        <h2 class="section-title">&lt; OUR SOLUTION /&gt;</h2>
         
-        <div class="stat-card">
-            <div class="stat-icon">👥</div>
-            <h3 class="stat-title">Team Members</h3>
-            <p class="stat-value">18</p>
-            <p class="stat-change positive">+3</p>
+        <div class="terminal-window" style="max-width: 100%; margin: 3rem 0;">
+            <div class="terminal-header">
+                <div class="terminal-dot"></div>
+                <div class="terminal-dot"></div>
+                <div class="terminal-dot"></div>
+                <span style="margin-left: 1rem; color: var(--terminal-green); font-size: 0.9rem;">solution-architecture.md</span>
+            </div>
+            <div class="terminal-body" style="text-align: left;">
+                <p style="color: var(--terminal-blue); margin-bottom: 2rem;">
+                    An AI-powered system that transforms unstructured news into verifiable, explainable claim graphs through autonomous multi-agent processing.
+                </p>
+                <p style="color: rgba(0, 255, 65, 0.8); line-height: 1.8;">
+                    Instead of treating articles as monolithic blocks, our system operates at the <span style="color: var(--terminal-green); font-weight: bold;">claim level</span> — the fundamental unit of journalistic verification. Each factual assertion is extracted, normalized into a canonical structure, and independently verified against external sources. This enables unprecedented scalability, cross-source comparison, and transparent traceability from raw text to final verdict.
+                </p>
+            </div>
         </div>
-        
-        <div class="stat-card">
-            <div class="stat-icon">✓</div>
-            <h3 class="stat-title">Completed</h3>
-            <p class="stat-value">156</p>
-            <p class="stat-change positive">+8%</p>
-        </div>
-        
-        <div class="stat-card">
-            <div class="stat-icon">⏰</div>
-            <h3 class="stat-title">In Progress</h3>
-            <p class="stat-value">12</p>
-            <p class="stat-change neutral">0%</p>
+
+        <div class="architecture-flow">
+            <div class="flow-step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Text Preprocessing Agent</h3>
+                    <p>Cleans and segments raw news text using rule-based NLP. Handles headlines, breaking news markers, quotes, and newsroom-specific structures. Ensures accurate sentence boundaries for downstream analysis.</p>
+                </div>
+            </div>
+
+            <div class="step-arrow">↓</div>
+
+            <div class="flow-step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Sentence Classification Agent</h3>
+                    <p>Analyzes each sentence to determine if it contains a verifiable factual claim, opinion, emotional framing, or contextual information. Filters out noise early in the pipeline.</p>
+                </div>
+            </div>
+
+            <div class="step-arrow">↓</div>
+
+            <div class="flow-step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Claim Extraction Agent</h3>
+                    <p>Extracts structured components from factual claims: subject, action, value, time, location, and source. Uses LLMs with strict schema validation to ensure consistent, hallucination-free outputs.</p>
+                </div>
+            </div>
+
+            <div class="step-arrow">↓</div>
+
+            <div class="flow-step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h3>Normalization Agent</h3>
+                    <p>Converts extracted components into canonical representations using deterministic rules. Ensures identical facts phrased differently map to the same canonical claim across all sources.</p>
+                </div>
+            </div>
+
+            <div class="step-arrow">↓</div>
+
+            <div class="flow-step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <h3>Verification Agent</h3>
+                    <p>Searches external sources for evidence supporting or contradicting each claim. Provides confidence scores, reasoning, and links to source material for full traceability.</p>
+                </div>
+            </div>
+
+            <div class="step-arrow">↓</div>
+
+            <div class="flow-step">
+                <div class="step-number">6</div>
+                <div class="step-content">
+                    <h3>Comparison & Analysis</h3>
+                    <p>Stores canonical claims in a global repository. Detects duplicates across sources, flags contradictions, identifies biased framing, and tracks narrative evolution over time.</p>
+                </div>
+            </div>
         </div>
     </section>
 
-    <!-- Inspirational Section -->
-    <section class="inspiration-section">
-        <div class="inspiration-card">
-            <div class="inspiration-content">
-                <h2 class="inspiration-title">WHEN THINGS CHANGE</h2>
-                <h3 class="inspiration-subtitle">INSIDE YOU</h3>
-                <div class="inspiration-visual">
-                    <div class="hands-container">
-                        <div class="hand left-hand">🤝</div>
-                        <div class="heart">❤️</div>
-                        <div class="hand right-hand">🤝</div>
-                    </div>
-                    <div class="flowers">
-                        <span class="flower">🌸</span>
-                        <span class="flower">🌼</span>
-                        <span class="flower">🌺</span>
-                        <span class="flower">🌸</span>
-                    </div>
-                </div>
-                <div class="inspiration-boxes">
-                    <div class="box">THINGS</div>
-                    <div class="arrow">→</div>
-                    <div class="box">CHANGE</div>
-                </div>
+    <!-- Features -->
+    <section class="section">
+        <h2 class="section-title">&lt; KEY FEATURES /&gt;</h2>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3 class="feature-title">Claim-Level Analysis</h3>
+                <p class="feature-description">
+                    Extracts individual factual claims instead of analyzing entire documents. Enables precise verification at the atomic unit of journalism.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <h3 class="feature-title">Canonical Normalization</h3>
+                <p class="feature-description">
+                    Converts different phrasings of the same fact into a single, comparable format. Solves language variability and enables reliable deduplication.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔗</div>
+                <h3 class="feature-title">Cross-Source Tracking</h3>
+                <p class="feature-description">
+                    Identifies identical claims across multiple outlets. Tracks how narratives spread and evolve through the media ecosystem.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">⚖️</div>
+                <h3 class="feature-title">Contradiction Detection</h3>
+                <p class="feature-description">
+                    Automatically flags claims that share the same subject and action but differ in values, timelines, or sources.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <h3 class="feature-title">Bias & Framing Analysis</h3>
+                <p class="feature-description">
+                    Highlights opinionated or emotionally loaded language surrounding factual claims. Reveals how different outlets frame the same facts.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📝</div>
+                <h3 class="feature-title">Complete Traceability</h3>
+                <p class="feature-description">
+                    Every extracted claim links back to its original sentence, paragraph, and source. Enables human reviewers to audit all AI decisions.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3 class="feature-title">Multi-Agent Architecture</h3>
+                <p class="feature-description">
+                    Specialized AI agents handle specific tasks. Modular design ensures reliability, explainability, and easy extensibility.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3 class="feature-title">Scalable Processing</h3>
+                <p class="feature-description">
+                    Batch processing and claim caching enable analysis of thousands of articles. Near real-time verification at newsroom scale.
+                </p>
             </div>
         </div>
     </section>
 
-    <!-- Activity Timeline -->
-    <section class="activity-section">
-        <h2 class="section-title">Recent Activity</h2>
-        <div class="timeline">
-            <div class="timeline-item">
-                <div class="timeline-marker"></div>
-                <div class="timeline-content">
-                    <h4>Project Launch</h4>
-                    <p>New dashboard project initiated</p>
-                    <span class="timeline-date">2 hours ago</span>
-                </div>
+    <!-- Statistics -->
+    <section class="stats-section">
+        <h2 class="section-title" style="color: var(--terminal-blue);">SYSTEM STATUS</h2>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number">∞</div>
+                <div class="stat-label">Claims Processable</div>
             </div>
-            
-            <div class="timeline-item">
-                <div class="timeline-marker"></div>
-                <div class="timeline-content">
-                    <h4>Team Meeting</h4>
-                    <p>Weekly sync completed</p>
-                    <span class="timeline-date">5 hours ago</span>
-                </div>
+            <div class="stat-item">
+                <div class="stat-number">6</div>
+                <div class="stat-label">AI Agents</div>
             </div>
-            
-            <div class="timeline-item">
-                <div class="timeline-marker"></div>
-                <div class="timeline-content">
-                    <h4>Milestone Achieved</h4>
-                    <p>Phase 1 completed successfully</p>
-                    <span class="timeline-date">1 day ago</span>
-                </div>
+            <div class="stat-item">
+                <div class="stat-number">100%</div>
+                <div class="stat-label">Traceable</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">&lt;30s</div>
+                <div class="stat-label">Verification Time</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="cta-section">
+        <div class="cta-content">
+            <h2 class="cta-title">Ready to Verify the Truth?</h2>
+            <p class="cta-subtitle">Start analyzing news content with AI-powered claim verification</p>
+            <div class="cta-buttons">
+                <a href="{% url 'extract_claims' %}" class="cta-button">
+                    Analyze Text →
+                </a>
+                <a href="{% url 'yt_analyzer' %}" class="cta-button secondary">
+                    Analyze YouTube Video →
+                </a>
             </div>
         </div>
     </section>
@@ -119,5 +877,48 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/dashboard.js' %}"></script>
+<script>
+    // Generate particle background
+    function createParticles() {
+        const container = document.getElementById('particles');
+        const particleCount = 50;
+        
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.top = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 20 + 's';
+            particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+            container.appendChild(particle);
+        }
+    }
+
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+
+    // Hide scroll indicator after scrolling
+    let scrollTimeout;
+    window.addEventListener('scroll', () => {
+        const indicator = document.querySelector('.scroll-indicator');
+        if (window.scrollY > 100) {
+            indicator.style.opacity = '0';
+        } else {
+            indicator.style.opacity = '0.6';
+        }
+    });
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        createParticles();
+    });
+</script>
 {% endblock %}

@@ -3,5 +3,7 @@ from . import views
 
 
 urlpatterns = [
-    path('extract_claims/', views.extract_claims)
+   path('extract-claims/', views.extract_claims, name='extract_claims'),
+   path('yt/', views.yt_analyzer, name='yt_analyzer'),
+   path('load-transcript/', views.load_transcript_view, name='load_transcript'),
 ]

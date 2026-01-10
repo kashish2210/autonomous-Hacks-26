@@ -1,34 +1,481 @@
-{% for claim in claims %}
-  <div class="claim-card">
-    <p><strong>Canonical Claim:</strong> {{ claim.canonical_claim }}</p>
+{% extends 'base.html' %}
+{% load static %}
 
-    {% if claim.verification.verdict %}
-      <p><strong>Status:</strong> {{ claim.verification.verdict }}</p>
-      <p><strong>Confidence:</strong> {{ claim.verification.confidence }}</p>
-      <p><strong>Reasoning:</strong> {{ claim.verification.reasoning }}</p>
+{% block title %}Verification Results - Source Analyzer{% endblock %}
 
-      {% if claim.verification.evidence_sources %}
-        <p><strong>Evidence:</strong></p>
-        <ul>
-          {% for src in claim.verification.evidence_sources %}
-            <li>{{ src }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    {% else %}
-      <p><em>Pending verification</em></p>
-    {% endif %}
+{% block extra_css %}
+<style>
+    .results-container {
+        max-width: 1400px;
+        margin: 2rem auto;
+        padding: 2rem;
+    }
 
-    <details>
-      <summary>Occurrences ({{ claim.occurrences | length }})</summary>
-      <ul>
-        {% for occ in claim.occurrences %}
-          <li>
-            [Sentence {{ occ.sentence_id }}]
-            {{ occ.original_sentence }}
-          </li>
+    .results-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .results-header h1 {
+        font-size: 2.5rem;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .results-header p {
+        font-size: 1.1rem;
+        color: var(--text-secondary);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .stat-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        border: 2px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-verified .stat-number {
+        color: #22c55e;
+    }
+
+    .stat-unverifiable .stat-number {
+        color: #ef4444;
+    }
+
+    .stat-total .stat-number {
+        color: #6366f1;
+    }
+
+    .claims-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .claim-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 2rem;
+        border: 2px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
+
+    .claim-card:hover {
+        border-color: #6366f1;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+    }
+
+    .claim-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1.5rem;
+        gap: 1rem;
+    }
+
+    .claim-text {
+        flex: 1;
+        font-size: 1.2rem;
+        color: var(--text-primary);
+        font-weight: 500;
+        line-height: 1.6;
+    }
+
+    .claim-status-badge {
+        padding: 0.5rem 1.25rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+    }
+
+    .status-VERIFIED {
+        background: rgba(34, 197, 94, 0.15);
+        color: #16a34a;
+        border: 2px solid #22c55e;
+    }
+
+    .status-UNVERIFIABLE {
+        background: rgba(239, 68, 68, 0.15);
+        color: #dc2626;
+        border: 2px solid #ef4444;
+    }
+
+    .status-PENDING {
+        background: rgba(234, 179, 8, 0.15);
+        color: #ca8a04;
+        border: 2px solid #eab308;
+    }
+
+    .claim-details {
+        display: grid;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .detail-row {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: var(--text-primary);
+        min-width: 100px;
+    }
+
+    .detail-value {
+        color: var(--text-secondary);
+        flex: 1;
+    }
+
+    .confidence-bar {
+        height: 8px;
+        background: var(--border-color);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+    }
+
+    .confidence-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #22c55e 0%, #eab308 50%, #ef4444 100%);
+        transition: width 0.5s ease;
+    }
+
+    .evidence-section {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .evidence-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .evidence-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .evidence-item {
+        padding: 0.75rem 1rem;
+        background: var(--bg-primary);
+        border-radius: 6px;
+        border-left: 3px solid #6366f1;
+        transition: all 0.3s ease;
+    }
+
+    .evidence-item:hover {
+        background: rgba(99, 102, 241, 0.05);
+        transform: translateX(4px);
+    }
+
+    .evidence-item a {
+        color: #6366f1;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .evidence-item a:hover {
+        text-decoration: underline;
+    }
+
+    .occurrences-section {
+        margin-top: 1.5rem;
+    }
+
+    .occurrences-toggle {
+        background: var(--bg-primary);
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1rem 1.5rem;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--text-primary);
+        transition: all 0.3s ease;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .occurrences-toggle:hover {
+        border-color: #6366f1;
+        background: rgba(99, 102, 241, 0.05);
+    }
+
+    .occurrences-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+
+    .occurrences-content.active {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .occurrence-list {
+        list-style: none;
+        padding: 1rem 0 0 0;
+        margin: 0;
+    }
+
+    .occurrence-item {
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        background: var(--bg-primary);
+        border-radius: 6px;
+        border-left: 3px solid #8b5cf6;
+    }
+
+    .occurrence-label {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .occurrence-text {
+        color: var(--text-primary);
+        line-height: 1.6;
+    }
+
+    .no-evidence {
+        color: var(--text-secondary);
+        font-style: italic;
+        padding: 1rem;
+        background: var(--bg-primary);
+        border-radius: 6px;
+    }
+
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background: var(--card-bg);
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        margin-bottom: 2rem;
+    }
+
+    .back-button:hover {
+        border-color: #6366f1;
+        color: #6366f1;
+        transform: translateX(-4px);
+    }
+
+    @media (max-width: 768px) {
+        .results-container {
+            padding: 1rem;
+        }
+
+        .claim-header {
+            flex-direction: column;
+        }
+
+        .claim-status-badge {
+            align-self: flex-start;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="results-container">
+    <a href="{% url 'extract_claims' %}" class="back-button">
+        ← Back to Analyzer
+    </a>
+
+    <div class="results-header">
+        <h1>Verification Results</h1>
+        <p>Claims have been extracted and verified using AI agents</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card stat-total">
+            <div class="stat-number">{{ claims|length }}</div>
+            <div class="stat-label">Total Claims</div>
+        </div>
+        <div class="stat-card stat-verified">
+            <div class="stat-number">
+                {% with verified=0 %}
+                {% for claim in claims %}
+                    {% if claim.verification.verdict == 'VERIFIED' %}
+                        {% with verified=verified|add:1 %}{% endwith %}
+                    {% endif %}
+                {% endfor %}
+                {{ verified }}
+                {% endwith %}
+            </div>
+            <div class="stat-label">Verified</div>
+        </div>
+        <div class="stat-card stat-unverifiable">
+            <div class="stat-number">
+                {% with unverifiable=0 %}
+                {% for claim in claims %}
+                    {% if claim.verification.verdict == 'UNVERIFIABLE' %}
+                        {% with unverifiable=unverifiable|add:1 %}{% endwith %}
+                    {% endif %}
+                {% endfor %}
+                {{ unverifiable }}
+                {% endwith %}
+            </div>
+            <div class="stat-label">Unverifiable</div>
+        </div>
+    </div>
+
+    <div class="claims-list">
+        {% for claim in claims %}
+        <div class="claim-card">
+            <div class="claim-header">
+                <div class="claim-text">{{ claim.canonical_claim }}</div>
+                {% if claim.verification.verdict %}
+                    <div class="claim-status-badge status-{{ claim.verification.verdict }}">
+                        {{ claim.verification.verdict }}
+                    </div>
+                {% else %}
+                    <div class="claim-status-badge status-PENDING">Pending</div>
+                {% endif %}
+            </div>
+
+            {% if claim.verification.verdict %}
+                <div class="claim-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Confidence:</span>
+                        <span class="detail-value">{{ claim.verification.confidence|floatformat:2 }}</span>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: {{ claim.verification.confidence|floatformat:0 }}%"></div>
+                    </div>
+
+                    {% if claim.verification.reasoning %}
+                        <div class="detail-row">
+                            <span class="detail-label">Reasoning:</span>
+                            <span class="detail-value">{{ claim.verification.reasoning }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if claim.verification.evidence_sources %}
+                    <div class="evidence-section">
+                        <div class="evidence-title">
+                            Evidence Sources
+                        </div>
+                        <ul class="evidence-list">
+                            {% for source in claim.verification.evidence_sources %}
+                                <li class="evidence-item">
+                                    <a href="{{ source }}" target="_blank" rel="noopener noreferrer">
+                                        {{ source }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% else %}
+                    <div class="evidence-section">
+                        <div class="no-evidence">No evidence sources available</div>
+                    </div>
+                {% endif %}
+            {% endif %}
+
+            <div class="occurrences-section">
+                <button class="occurrences-toggle" onclick="toggleOccurrences(this)">
+                    <span>View Occurrences ({{ claim.occurrences|length }})</span>
+                    <span class="toggle-icon">▼</span>
+                </button>
+                <div class="occurrences-content">
+                    <ul class="occurrence-list">
+                        {% for occ in claim.occurrences %}
+                            <li class="occurrence-item">
+                                <div class="occurrence-label">Sentence {{ occ.sentence_id }}</div>
+                                <div class="occurrence-text">{{ occ.original_sentence }}</div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
         {% endfor %}
-      </ul>
-    </details>
-  </div>
-{% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleOccurrences(button) {
+        const content = button.nextElementSibling;
+        const icon = button.querySelector('.toggle-icon');
+        
+        if (content.classList.contains('active')) {
+            content.classList.remove('active');
+            icon.textContent = '▼';
+        } else {
+            content.classList.add('active');
+            icon.textContent = '▲';
+        }
+    }
+
+    // Animate confidence bars on load
+    window.addEventListener('load', () => {
+        const bars = document.querySelectorAll('.confidence-fill');
+        bars.forEach(bar => {
+            const width = bar.style.width;
+            bar.style.width = '0%';
+            setTimeout(() => {
+                bar.style.width = width;
+            }, 100);
+        });
+    });
+</script>
+{% endblock %}

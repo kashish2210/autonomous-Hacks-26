@@ -8,4 +8,8 @@ openai
 langchain-groq
 groq
 spacy
-
+google-search-results
+langchain_community
+google-api-python-client
+duckduckgo-search
+youtube-transcript-api
