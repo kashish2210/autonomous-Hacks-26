@@ -3,5 +3,5 @@ from . import views
 
 
 urlpatterns = [
-    path('extract_claims/', views.extract_claims)
+    path('extract-claims/', views.extract_claims, name='extract_claims'),
 ]
