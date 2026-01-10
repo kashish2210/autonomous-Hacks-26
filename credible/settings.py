@@ -14,11 +14,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-key')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 # ALLOWED_HOSTS configuration
-ALLOWED_HOSTS = [
-    'autonomus-hack-26.uc.r.appspot.com',
-    'localhost',
-    '127.0.0.1',
-]
+ALLOWED_HOSTS = ['*']
 
 # Add your Render domain when you get it
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
