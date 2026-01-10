@@ -45,8 +45,16 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'main',
     'agents',
-    'analyzer'
+    'analyzer',
+    'storages'
 ]
+# Static files configuration for production
+if not DEBUG:
+    DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+    STATICFILES_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+    GS_BUCKET_NAME = 'autonomus-hack-26-static'  # Create this bucket
+    GS_DEFAULT_ACL = 'publicRead'
+    STATIC_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
