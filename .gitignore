@@ -10,3 +10,4 @@ media/
 venv1/
 **/migrations
 venv2
+app.yaml
