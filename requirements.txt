@@ -2,7 +2,6 @@ django
 gunicorn
 django-storages 
 google-cloud-storage
-pydantic
 dotenv
 bs4
 requests
@@ -10,3 +9,5 @@ langchain
 openai
 langchain-groq
 groq
+spacy
+
