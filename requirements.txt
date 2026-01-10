@@ -1,1 +1,11 @@
 django
+pydantic
+dotenv
+bs4
+requests
+langchain
+openai
+langchain-groq
+groq
+
+
