@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Long Text Form</title>
+</head>
+<body>
+
+<h2>Submit Long Text</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Submit</button>
+</form>
+
+{% if submitted_text %}
+    <hr>
+    <h3>Submitted Text</h3>
+    <pre>{{ submitted_text }}</pre>
+{% endif %}
+
+</body>
+</html>

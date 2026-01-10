@@ -1,7 +1,7 @@
-from sentence_segmentation import sentence_segmentation
-from sentence_classifier import classify_sentence
-from claim_normalizer import normalize_claim
-from claim_store import GlobalClaimStore
+from .sentence_segmentation import sentence_segmentation
+from .sentence_classifier import classify_sentence
+from .claim_normalizer import normalize_claim
+from .claim_store import GlobalClaimStore
 from dotenv import load_dotenv
 
 load_dotenv()
