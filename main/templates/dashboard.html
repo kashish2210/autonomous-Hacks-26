@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Home{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">
+                <span class="title-line">STRENGTHS</span>
+            </h1>
+            <div class="hero-bars">
+                <div class="bar" style="width: 85%;"></div>
+                <div class="bar" style="width: 70%;"></div>
+                <div class="bar" style="width: 78%;"></div>
+                <div class="bar" style="width: 92%;"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Grid -->
+    <section class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <h3 class="stat-title">Projects</h3>
+            <p class="stat-value">24</p>
+            <p class="stat-change positive">+12%</p>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <h3 class="stat-title">Team Members</h3>
+            <p class="stat-value">18</p>
+            <p class="stat-change positive">+3</p>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">✓</div>
+            <h3 class="stat-title">Completed</h3>
+            <p class="stat-value">156</p>
+            <p class="stat-change positive">+8%</p>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">⏰</div>
+            <h3 class="stat-title">In Progress</h3>
+            <p class="stat-value">12</p>
+            <p class="stat-change neutral">0%</p>
+        </div>
+    </section>
+
+    <!-- Inspirational Section -->
+    <section class="inspiration-section">
+        <div class="inspiration-card">
+            <div class="inspiration-content">
+                <h2 class="inspiration-title">WHEN THINGS CHANGE</h2>
+                <h3 class="inspiration-subtitle">INSIDE YOU</h3>
+                <div class="inspiration-visual">
+                    <div class="hands-container">
+                        <div class="hand left-hand">🤝</div>
+                        <div class="heart">❤️</div>
+                        <div class="hand right-hand">🤝</div>
+                    </div>
+                    <div class="flowers">
+                        <span class="flower">🌸</span>
+                        <span class="flower">🌼</span>
+                        <span class="flower">🌺</span>
+                        <span class="flower">🌸</span>
+                    </div>
+                </div>
+                <div class="inspiration-boxes">
+                    <div class="box">THINGS</div>
+                    <div class="arrow">→</div>
+                    <div class="box">CHANGE</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Activity Timeline -->
+    <section class="activity-section">
+        <h2 class="section-title">Recent Activity</h2>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                    <h4>Project Launch</h4>
+                    <p>New dashboard project initiated</p>
+                    <span class="timeline-date">2 hours ago</span>
+                </div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                    <h4>Team Meeting</h4>
+                    <p>Weekly sync completed</p>
+                    <span class="timeline-date">5 hours ago</span>
+                </div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                    <h4>Milestone Achieved</h4>
+                    <p>Phase 1 completed successfully</p>
+                    <span class="timeline-date">1 day ago</span>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}
