@@ -1,0 +1,496 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Source Analyzer - Professional Analysis{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analyzer-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        height: calc(100vh - 140px);
+        padding: 20px;
+    }
+    
+    .input-panel {
+        background: var(--card-bg);
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        overflow-y: auto;
+    }
+    
+    .terminal-panel {
+        background: #1e1e1e;
+        border-radius: 10px;
+        padding: 0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    
+    .terminal-header {
+        background: #323233;
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-bottom: 1px solid #404040;
+    }
+    
+    .terminal-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+    
+    .dot-red { background: #ff5f56; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green { background: #27c93f; }
+    
+    .terminal-title {
+        color: #999;
+        font-size: 13px;
+        margin-left: 10px;
+    }
+    
+    .terminal-body {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        line-height: 1.6;
+        color: #d4d4d4;
+    }
+    
+    .terminal-line {
+        margin-bottom: 8px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        animation: fadeIn 0.3s ease-in;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .terminal-prompt {
+        color: #4ec9b0;
+        font-weight: bold;
+    }
+    
+    .terminal-text {
+        color: #d4d4d4;
+    }
+    
+    .terminal-agent {
+        color: #569cd6;
+        font-weight: bold;
+    }
+    
+    .terminal-success {
+        color: #4ec9b0;
+    }
+    
+    .terminal-warning {
+        color: #dcdcaa;
+    }
+    
+    .terminal-error {
+        color: #f48771;
+    }
+    
+    .progress-bar-container {
+        width: 100%;
+        height: 4px;
+        background: #404040;
+        border-radius: 2px;
+        margin-top: 10px;
+        overflow: hidden;
+    }
+    
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #4ec9b0, #569cd6);
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: var(--text-primary);
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: var(--text-primary);
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 15px;
+        background: var(--input-bg);
+        color: var(--text-primary);
+        transition: border-color 0.2s;
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .btn-analyze {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .btn-analyze:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-analyze:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .info-card {
+        background: var(--card-secondary);
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .info-title {
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: var(--text-primary);
+    }
+    
+    .info-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .info-list li {
+        padding: 8px 0;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .info-list li:before {
+        content: "✓";
+        color: #4ec9b0;
+        font-weight: bold;
+    }
+    
+    .recent-analyses {
+        margin-top: 30px;
+    }
+    
+    .recent-item {
+        padding: 12px;
+        background: var(--card-secondary);
+        border-radius: 6px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .recent-title {
+        font-size: 14px;
+        color: var(--text-primary);
+    }
+    
+    .recent-score {
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    
+    .score-success { background: #d4edda; color: #155724; }
+    .score-warning { background: #fff3cd; color: #856404; }
+    .score-danger { background: #f8d7da; color: #721c24; }
+    
+    @media (max-width: 1024px) {
+        .analyzer-container {
+            grid-template-columns: 1fr;
+            height: auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="analyzer-container">
+    <!-- Left Panel: Input Form -->
+    <div class="input-panel">
+        <h2 class="section-title">Article Analysis</h2>
+        
+        <div class="info-card">
+            <div class="info-title">Analysis Features</div>
+            <ul class="info-list">
+                <li>Automatic web scraping from URL</li>
+                <li>Named source detection with credibility ratings</li>
+                <li>Anonymous phrase identification</li>
+                <li>Red flag detection for weak journalism</li>
+                <li>Real-time transparency scoring</li>
+            </ul>
+        </div>
+        
+        <form id="analyzeForm">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label" for="article_url">Article URL</label>
+                <input 
+                    type="url" 
+                    id="article_url" 
+                    name="article_url" 
+                    class="form-input" 
+                    placeholder="https://example.com/article"
+                    required
+                >
+            </div>
+            
+            <button type="submit" class="btn-analyze" id="analyzeBtn">
+                Start Analysis
+            </button>
+        </form>
+        
+        {% if recent_analyses %}
+        <div class="recent-analyses">
+            <h3 style="margin-bottom: 15px; color: var(--text-primary);">Recent Analyses</h3>
+            {% for article in recent_analyses %}
+            <div class="recent-item">
+                <div>
+                    <div class="recent-title">{{ article.title|truncatechars:50 }}</div>
+                    <small style="color: var(--text-secondary);">{{ article.analyzed_at|date:"M d, H:i" }}</small>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    {% if article.transparency_score >= 70 %}
+                        <span class="recent-score score-success">{{ article.transparency_score }}</span>
+                    {% elif article.transparency_score >= 40 %}
+                        <span class="recent-score score-warning">{{ article.transparency_score }}</span>
+                    {% else %}
+                        <span class="recent-score score-danger">{{ article.transparency_score }}</span>
+                    {% endif %}
+                    <a href="{% url 'results' article.id %}" style="color: #667eea; text-decoration: none;">View</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Right Panel: Terminal Output -->
+    <div class="terminal-panel">
+        <div class="terminal-header">
+            <div class="terminal-dot dot-red"></div>
+            <div class="terminal-dot dot-yellow"></div>
+            <div class="terminal-dot dot-green"></div>
+            <span class="terminal-title">Analysis Terminal</span>
+        </div>
+        <div class="terminal-body" id="terminal">
+            <div class="terminal-line">
+                <span class="terminal-prompt">$</span>
+                <span class="terminal-text">Waiting for analysis to start...</span>
+            </div>
+            <div class="terminal-line">
+                <span class="terminal-text">Enter an article URL and click "Start Analysis"</span>
+            </div>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('analyzeForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const form = this;
+    const url = document.getElementById('article_url').value;
+    const terminal = document.getElementById('terminal');
+    const progressBar = document.getElementById('progressBar');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    
+    // Clear terminal
+    terminal.innerHTML = '';
+    progressBar.style.width = '0%';
+    analyzeBtn.disabled = true;
+    analyzeBtn.textContent = 'Analyzing...';
+    
+    // Add header
+    addTerminalLine('='.repeat(80), 'terminal-text');
+    addTerminalLine('SOURCE TRANSPARENCY ANALYSIS SYSTEM', 'terminal-success', true);
+    addTerminalLine('='.repeat(80), 'terminal-text');
+    addTerminalLine('', 'terminal-text');
+    
+    // Create EventSource for streaming
+    const formData = new FormData(form);
+    formData.append('article_url', url);
+    
+    fetch('{% url "analyze" %}', {
+        method: 'POST',
+        body: formData
+    }).then(response => {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        
+        function readStream() {
+            reader.read().then(({ done, value }) => {
+                if (done) {
+                    analyzeBtn.disabled = false;
+                    analyzeBtn.textContent = 'Start Analysis';
+                    return;
+                }
+                
+                const text = decoder.decode(value);
+                const lines = text.split('\n\n');
+                
+                lines.forEach(line => {
+                    if (line.startsWith('data: ')) {
+                        const data = JSON.parse(line.substring(6));
+                        handleStreamData(data);
+                    }
+                });
+                
+                readStream();
+            });
+        }
+        
+        readStream();
+    });
+    
+    function addTerminalLine(text, className = 'terminal-text', centered = false) {
+        const line = document.createElement('div');
+        line.className = 'terminal-line';
+        if (centered) {
+            line.style.justifyContent = 'center';
+        }
+        line.innerHTML = `<span class="${className}">${text}</span>`;
+        terminal.appendChild(line);
+        terminal.scrollTop = terminal.scrollHeight;
+    }
+    
+    function addSectionHeader(title) {
+        addTerminalLine('', 'terminal-text');
+        addTerminalLine(`┌── ${title.toUpperCase()} `, 'terminal-agent');
+        addTerminalLine('│', 'terminal-text');
+    }
+    
+    function addSectionFooter() {
+        addTerminalLine('│', 'terminal-text');
+        addTerminalLine('└' + '─'.repeat(78), 'terminal-text');
+    }
+    
+    let currentSection = null;
+    
+    function handleStreamData(data) {
+        if (data.step === 'error') {
+            addTerminalLine('', 'terminal-text');
+            addTerminalLine('✗ ERROR: ' + data.message, 'terminal-error');
+            analyzeBtn.disabled = false;
+            analyzeBtn.textContent = 'Start Analysis';
+            return;
+        }
+        
+        if (data.step === 'complete') {
+            if (currentSection) addSectionFooter();
+            
+            addTerminalLine('', 'terminal-text');
+            addTerminalLine('='.repeat(80), 'terminal-success');
+            addTerminalLine('✓ ANALYSIS COMPLETE', 'terminal-success', true);
+            addTerminalLine('='.repeat(80), 'terminal-success');
+            addTerminalLine('', 'terminal-text');
+            addTerminalLine(`Final Transparency Score: ${data.score}/100`, 'terminal-success');
+            
+            progressBar.style.width = '100%';
+            
+            // Redirect after 2 seconds
+            setTimeout(() => {
+                window.location.href = `/analyzer/results/${data.article_id}/`;
+            }, 2000);
+            return;
+        }
+        
+        // Section management
+        const sectionMap = {
+            'scraping': 'Web Scraper',
+            'init': 'System Initialization',
+            'agent1': 'Named Source Detection',
+            'agent2': 'Anonymous Phrase Analysis',
+            'agent3': 'Source Classification',
+            'agent4': 'Red Flag Detection',
+            'agent5': 'Transparency Scoring'
+        };
+        
+        if (sectionMap[data.step] && currentSection !== data.step) {
+            if (currentSection) addSectionFooter();
+            addSectionHeader(sectionMap[data.step]);
+            currentSection = data.step;
+        }
+        
+        // Add message
+        const line = document.createElement('div');
+        line.className = 'terminal-line';
+        
+        let icon = '│ ▸';
+        let className = 'terminal-text';
+        
+        if (data.step.startsWith('agent')) {
+            icon = '│ ⚙';
+            className = 'terminal-agent';
+        } else if (data.step === 'scraping') {
+            icon = '│ 🔍';
+            className = 'terminal-text';
+        }
+        
+        line.innerHTML = `
+            <span class="terminal-prompt">${icon}</span>
+            <span class="${className}">${data.message}</span>
+        `;
+        
+        terminal.appendChild(line);
+        terminal.scrollTop = terminal.scrollHeight;
+        
+        if (data.progress) {
+            progressBar.style.width = data.progress + '%';
+        }
+    }
+});
+</script>
+{% endblock %}
