@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'main',
     'agents',
-    'analyzer'
+    'analyzer',
+    'notes'
 ]
 
 MIDDLEWARE = [
@@ -127,3 +128,5 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+os.makedirs(os.path.join(BASE_DIR, 'media/reports/pdf'), exist_ok=True)
+os.makedirs(os.path.join(BASE_DIR, 'media/reports/video'), exist_ok=True)

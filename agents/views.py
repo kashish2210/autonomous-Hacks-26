@@ -16,6 +16,87 @@ def extract_claims(request):
         if form.is_valid():
             submitted_text = form.cleaned_data["content"]
             claims = verifier_run_pipeline(submitted_text)
+            
+            # AUTO-SAVE CLAIMS TO NOTES DATABASE
+            try:
+                from notes.models import Claim
+                
+                saved_count = 0
+                for claim_data in claims:
+                    try:
+                        # Extract claim information
+                        # Handle different possible formats
+                        if isinstance(claim_data, dict):
+                            claim_text = claim_data.get('claim', claim_data.get('text', ''))
+                            verification_status = claim_data.get('verification', claim_data.get('status', 'UNVERIFIABLE'))
+                            confidence = claim_data.get('confidence', 0.0)
+                            reasoning = claim_data.get('reasoning', '')
+                            sources = claim_data.get('sources', [])
+                        elif isinstance(claim_data, str):
+                            # If it's just a string, use it as the claim
+                            claim_text = claim_data
+                            verification_status = 'UNVERIFIABLE'
+                            confidence = 0.0
+                            reasoning = ''
+                            sources = []
+                        else:
+                            continue
+                        
+                        # Skip empty claims
+                        if not claim_text or claim_text.strip() == '':
+                            continue
+                        
+                        # Map verification status to our status choices
+                        status_mapping = {
+                            'VERIFIED': 'verified',
+                            'TRUE': 'verified',
+                            'FALSE': 'false',
+                            'MISLEADING': 'misleading',
+                            'UNVERIFIABLE': 'pending',
+                            'PENDING': 'pending',
+                        }
+                        
+                        db_status = status_mapping.get(
+                            verification_status.upper() if isinstance(verification_status, str) else 'PENDING',
+                            'pending'
+                        )
+                        
+                        # Build verification notes
+                        verification_notes_parts = []
+                        if reasoning:
+                            verification_notes_parts.append(f"Reasoning: {reasoning}")
+                        if confidence:
+                            verification_notes_parts.append(f"Confidence: {confidence}")
+                        if sources:
+                            verification_notes_parts.append(f"Sources: {', '.join(sources[:3])}")
+                        
+                        verification_notes = '\n'.join(verification_notes_parts)
+                        
+                        # Create title from first 100 chars of claim
+                        title = claim_text[:100] + '...' if len(claim_text) > 100 else claim_text
+                        
+                        # Save to database
+                        Claim.objects.create(
+                            title=title,
+                            content=claim_text,
+                            verification_notes=verification_notes,
+                            status=db_status,
+                            source_type='text',
+                            created_by=request.user if request.user.is_authenticated else None
+                        )
+                        saved_count += 1
+                        
+                    except Exception as e:
+                        print(f"Error saving individual claim: {str(e)}")
+                        continue
+                
+                print(f"[Auto-save] Successfully saved {saved_count} claims to Notes database")
+                
+            except ImportError:
+                print("[Auto-save] Notes app not available - claims not saved")
+            except Exception as e:
+                print(f"[Auto-save] Error saving claims: {str(e)}")
+                traceback.print_exc()
 
             return render(request, "claim_list.html", {'claims': claims})
     else:
@@ -70,6 +151,86 @@ def load_transcript_view(request):
                 transcript_text = transcript_docs[0].page_content
                 print(f"[View] Success! Transcript length: {len(transcript_text)} characters")
                 print(f"[View] Preview: {transcript_text[:100]}...")
+                
+                # Extract and save claims from transcript
+                try:
+                    claims = verifier_run_pipeline(transcript_text)
+                    
+                    # AUTO-SAVE CLAIMS TO NOTES DATABASE
+                    from notes.models import Claim
+                    
+                    saved_count = 0
+                    for claim_data in claims:
+                        try:
+                            # Extract claim information
+                            if isinstance(claim_data, dict):
+                                claim_text = claim_data.get('claim', claim_data.get('text', ''))
+                                verification_status = claim_data.get('verification', 'UNVERIFIABLE')
+                                confidence = claim_data.get('confidence', 0.0)
+                                reasoning = claim_data.get('reasoning', '')
+                                sources = claim_data.get('sources', [])
+                            elif isinstance(claim_data, str):
+                                claim_text = claim_data
+                                verification_status = 'UNVERIFIABLE'
+                                confidence = 0.0
+                                reasoning = ''
+                                sources = []
+                            else:
+                                continue
+                            
+                            if not claim_text or claim_text.strip() == '':
+                                continue
+                            
+                            # Map status
+                            status_mapping = {
+                                'VERIFIED': 'verified',
+                                'TRUE': 'verified',
+                                'FALSE': 'false',
+                                'MISLEADING': 'misleading',
+                                'UNVERIFIABLE': 'pending',
+                                'PENDING': 'pending',
+                            }
+                            
+                            db_status = status_mapping.get(
+                                verification_status.upper() if isinstance(verification_status, str) else 'PENDING',
+                                'pending'
+                            )
+                            
+                            # Build verification notes
+                            verification_notes_parts = []
+                            if reasoning:
+                                verification_notes_parts.append(f"Reasoning: {reasoning}")
+                            if confidence:
+                                verification_notes_parts.append(f"Confidence: {confidence}")
+                            if sources:
+                                verification_notes_parts.append(f"Sources: {', '.join(sources[:3])}")
+                            
+                            verification_notes = '\n'.join(verification_notes_parts)
+                            
+                            # Create title
+                            title = claim_text[:100] + '...' if len(claim_text) > 100 else claim_text
+                            
+                            # Save to database
+                            Claim.objects.create(
+                                title=title,
+                                content=claim_text,
+                                source_url=url,
+                                source_type='youtube',
+                                verification_notes=verification_notes,
+                                status=db_status,
+                                created_by=request.user if request.user.is_authenticated else None
+                            )
+                            saved_count += 1
+                            
+                        except Exception as e:
+                            print(f"[YT Auto-save] Error saving individual claim: {str(e)}")
+                            continue
+                    
+                    print(f"[YT Auto-save] Successfully saved {saved_count} claims from YouTube transcript")
+                    
+                except Exception as e:
+                    print(f"[YT Auto-save] Error in claim extraction/saving: {str(e)}")
+                    traceback.print_exc()
                 
                 return JsonResponse({
                     'success': True,

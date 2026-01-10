@@ -13,3 +13,6 @@ langchain_community
 google-api-python-client
 duckduckgo-search
 youtube-transcript-api
+Pillow
+google-generativeai
+reportlab
