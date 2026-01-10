@@ -3,14 +3,14 @@ gunicorn
 whitenoise
 django-storages 
 google-cloud-storage
-dotenv
-bs4
+python-dotenv
+beautifulsoup4
 requests
 langchain
 openai
 langchain-groq
 groq
 nltk
-textblob
 langchain-community
 psycopg2-binary
+dj-database-url
