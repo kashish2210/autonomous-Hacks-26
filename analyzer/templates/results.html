@@ -1,0 +1,521 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Analysis Results - {{ article.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .results-wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 1000;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .terminal-window {
+        background: #1e1e1e;
+        border-radius: 12px;
+        width: 100%;
+        max-width: 1400px;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        animation: slideUp 0.4s ease;
+    }
+    
+    @keyframes slideUp {
+        from { transform: translateY(50px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .terminal-header {
+        background: #323233;
+        padding: 15px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #404040;
+        border-radius: 12px 12px 0 0;
+    }
+    
+    .terminal-controls {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .terminal-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+    
+    .dot-red { background: #ff5f56; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green { background: #27c93f; }
+    
+    .terminal-title {
+        color: #999;
+        font-size: 13px;
+        flex: 1;
+        text-align: center;
+    }
+    
+    .terminal-body {
+        flex: 1;
+        padding: 30px;
+        overflow-y: auto;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        line-height: 1.8;
+        color: #d4d4d4;
+    }
+    
+    .terminal-section {
+        margin-bottom: 30px;
+    }
+    
+    .section-header {
+        color: #4ec9b0;
+        font-weight: bold;
+        font-size: 16px;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #404040;
+    }
+    
+    .score-display {
+        text-align: center;
+        padding: 30px;
+        margin: 20px 0;
+        background: #2d2d2d;
+        border-radius: 8px;
+        border: 2px solid #4ec9b0;
+    }
+    
+    .score-number {
+        font-size: 4rem;
+        font-weight: bold;
+        color: #4ec9b0;
+        margin-bottom: 10px;
+    }
+    
+    .score-label {
+        color: #999;
+        font-size: 1.2rem;
+    }
+    
+    .score-verdict {
+        color: #dcdcaa;
+        font-size: 1rem;
+        margin-top: 10px;
+    }
+    
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        margin: 20px 0;
+    }
+    
+    .stat-box {
+        background: #2d2d2d;
+        padding: 20px;
+        border-radius: 6px;
+        text-align: center;
+        border-left: 3px solid #569cd6;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        color: #569cd6;
+        font-weight: bold;
+    }
+    
+    .stat-name {
+        color: #999;
+        font-size: 0.85rem;
+        margin-top: 8px;
+        text-transform: uppercase;
+    }
+    
+    .source-item {
+        background: #2d2d2d;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 12px;
+        border-left: 4px solid #4ec9b0;
+    }
+    
+    .source-name {
+        color: #4ec9b0;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .source-detail {
+        color: #999;
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+    
+    .credibility-tag {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        margin-top: 8px;
+        text-transform: uppercase;
+    }
+    
+    .cred-high { background: #4ec9b0; color: #000; }
+    .cred-medium { background: #dcdcaa; color: #000; }
+    .cred-low { background: #f48771; color: #000; }
+    
+    .anonymous-item {
+        background: #3a3a2a;
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        border-left: 4px solid #dcdcaa;
+    }
+    
+    .anonymous-phrase {
+        color: #dcdcaa;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .anonymous-context {
+        color: #999;
+        font-size: 0.9rem;
+        font-style: italic;
+    }
+    
+    .red-flag-item {
+        background: #3a2a2a;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 12px;
+        border-left: 4px solid #f48771;
+    }
+    
+    .flag-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+    
+    .flag-severity {
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    
+    .severity-HIGH { background: #f48771; color: #000; }
+    .severity-MEDIUM { background: #dcdcaa; color: #000; }
+    .severity-LOW { background: #569cd6; color: #000; }
+    
+    .flag-name {
+        color: #f48771;
+        font-weight: bold;
+    }
+    
+    .flag-description {
+        color: #999;
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+    
+    .empty-message {
+        text-align: center;
+        padding: 40px;
+        color: #4ec9b0;
+        font-size: 1.1rem;
+    }
+    
+    .terminal-footer {
+        background: #323233;
+        padding: 15px 20px;
+        border-top: 1px solid #404040;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 0 0 12px 12px;
+    }
+    
+    .btn-close {
+        background: #569cd6;
+        color: #fff;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 6px;
+        font-weight: bold;
+        cursor: pointer;
+        font-family: 'Courier New', monospace;
+        transition: background 0.2s;
+    }
+    
+    .btn-close:hover {
+        background: #4ec9b0;
+    }
+    
+    .terminal-info {
+        color: #999;
+        font-size: 0.85rem;
+    }
+    
+    @media (max-width: 1024px) {
+        .stat-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .stat-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .score-number {
+            font-size: 3rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="results-wrapper">
+    <div class="terminal-window">
+        <div class="terminal-header">
+            <div class="terminal-controls">
+                <div class="terminal-dot dot-red" onclick="window.location.href='{% url 'analyzer' %}'"></div>
+                <div class="terminal-dot dot-yellow"></div>
+                <div class="terminal-dot dot-green"></div>
+            </div>
+            <div class="terminal-title">analysis-results.terminal</div>
+            <div style="width: 60px;"></div>
+        </div>
+        
+        <div class="terminal-body">
+            <!-- Article Info -->
+            <div class="terminal-section">
+                <div class="section-header">═══ ARTICLE INFORMATION ═══</div>
+                <div style="color: #999;">
+                    <div><span style="color: #569cd6;">Title:</span> {{ article.title }}</div>
+                    <div><span style="color: #569cd6;">URL:</span> 
+                        {% if article.url %}
+                            <a href="{{ article.url }}" target="_blank" style="color: #4ec9b0;">{{ article.url }}</a>
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </div>
+                    <div><span style="color: #569cd6;">Analyzed:</span> {{ article.analyzed_at|date:"F d, Y - H:i:s" }}</div>
+                </div>
+            </div>
+            
+            <!-- Score Display -->
+            <div class="terminal-section">
+                <div class="section-header">═══ TRANSPARENCY SCORE ═══</div>
+                <div class="score-display">
+                    <div class="score-number">{{ article.transparency_score }}</div>
+                    <div class="score-label">/ 100</div>
+                    <div class="score-verdict">{{ score_label }} Transparency</div>
+                </div>
+            </div>
+            
+            <!-- Statistics -->
+            <div class="terminal-section">
+                <div class="section-header">═══ SOURCE STATISTICS ═══</div>
+                <div class="stat-grid">
+                    <div class="stat-box">
+                        <div class="stat-value">{{ article.source_breakdown.total_sources }}</div>
+                        <div class="stat-name">Total Sources</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">{{ article.source_breakdown.named_count }}</div>
+                        <div class="stat-name">Named Sources</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">{{ article.source_breakdown.anonymous_count }}</div>
+                        <div class="stat-name">Anonymous</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">{{ article.source_breakdown.named_high_credibility }}</div>
+                        <div class="stat-name">High Credibility</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Named Sources -->
+            <div class="terminal-section">
+                <div class="section-header">═══ NAMED SOURCES ═══</div>
+                {% if article.named_sources %}
+                    {% for source in article.named_sources %}
+                        <div class="source-item">
+                            <div class="source-name">{{ source.name }}</div>
+                            <div class="source-detail">
+                                <div>Position: {{ source.title }}</div>
+                                <div>Context: "{{ source.quote_context }}"</div>
+                                {% if source.expertise_relevance %}
+                                <div style="margin-top: 5px; color: #999;">
+                                    Expertise: {{ source.expertise_relevance }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <span class="credibility-tag cred-{{ source.credibility }}">
+                                {{ source.credibility }} credibility
+                            </span>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-message">⚠ No named sources detected</div>
+                {% endif %}
+            </div>
+            
+            <!-- Anonymous Phrases -->
+            <div class="terminal-section">
+                <div class="section-header">═══ ANONYMOUS ATTRIBUTION ═══</div>
+                {% if article.anonymous_phrases %}
+                    {% for phrase in article.anonymous_phrases %}
+                        <div class="anonymous-item">
+                            <div class="anonymous-phrase">
+                                → {{ phrase.phrase }}
+                                {% if phrase.vagueness_score %}
+                                <span style="float: right; color: #dcdcaa; font-size: 0.85rem;">
+                                    Vagueness: {{ phrase.vagueness_score }}/10
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div class="anonymous-context">...{{ phrase.context }}...</div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-message">✓ No anonymous attribution detected</div>
+                {% endif %}
+            </div>
+            
+            <!-- Bias Analysis -->
+            {% if article.attribution_patterns.bias_analysis %}
+            <div class="terminal-section">
+                <div class="section-header">═══ BIAS ANALYSIS ═══</div>
+                {% for bias in article.attribution_patterns.bias_analysis %}
+                    <div class="red-flag-item">
+                        <div class="flag-header">
+                            <span class="flag-severity severity-{{ bias.severity }}">{{ bias.severity }}</span>
+                            <span class="flag-name">{{ bias.bias_type }}</span>
+                        </div>
+                        <div class="flag-description">
+                            <strong>Evidence:</strong> {{ bias.evidence }}<br>
+                            <strong>Context:</strong> {{ bias.context }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- Red Flags -->
+            <div class="terminal-section">
+                <div class="section-header">═══ RED FLAGS ═══</div>
+                {% if article.red_flags %}
+                    {% for flag in article.red_flags %}
+                        <div class="red-flag-item">
+                            <div class="flag-header">
+                                <span class="flag-severity severity-{{ flag.severity }}">{{ flag.severity }}</span>
+                                <span class="flag-name">{{ flag.flag }}</span>
+                            </div>
+                            <div class="flag-description">
+                                {{ flag.description }}
+                                {% if flag.recommendation %}
+                                <div style="margin-top: 8px; color: #4ec9b0;">
+                                    → Fix: {{ flag.recommendation }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-message">✓ No red flags detected - Good journalism!</div>
+                {% endif %}
+            </div>
+            
+            <!-- Quality Metrics -->
+            {% if article.attribution_patterns.source_quality %}
+            <div class="terminal-section">
+                <div class="section-header">═══ QUALITY METRICS ═══</div>
+                <div class="stat-grid">
+                    <div class="stat-box">
+                        <div class="stat-value">{{ article.attribution_patterns.source_quality.diversity_score|default:0 }}</div>
+                        <div class="stat-name">Diversity</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">{{ article.attribution_patterns.source_quality.authority_score|default:0 }}</div>
+                        <div class="stat-name">Authority</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">{{ article.attribution_patterns.source_quality.independence_score|default:0 }}</div>
+                        <div class="stat-name">Independence</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">{{ article.attribution_patterns.source_quality.transparency_score|default:0 }}</div>
+                        <div class="stat-name">Transparency</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Recommendations -->
+            {% if article.attribution_patterns.recommendations %}
+            <div class="terminal-section">
+                <div class="section-header">═══ IMPROVEMENT RECOMMENDATIONS ═══</div>
+                {% for rec in article.attribution_patterns.recommendations %}
+                    <div style="background: #2d2d2d; padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #4ec9b0;">
+                        <span style="color: #4ec9b0;">→</span> {{ rec }}
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="terminal-footer">
+            <div class="terminal-info">Press ESC or click red dot to close</div>
+            <button class="btn-close" onclick="window.location.href='{% url 'analyzer' %}'">
+                Close Terminal
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Close on ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        window.location.href = '{% url "analyzer" %}';
+    }
+});
+
+// Close on background click
+document.querySelector('.results-wrapper').addEventListener('click', function(e) {
+    if (e.target === this) {
+        window.location.href = '{% url "analyzer" %}';
+    }
+});
+</script>
+{% endblock %}
