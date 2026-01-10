@@ -32,6 +32,8 @@ INSTALLED_APPS = [
     'main',
     'agents',
     'analyzer',
+    'notes',
+    'analyzer'
 ]
 
 MIDDLEWARE = [
@@ -124,6 +126,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+os.makedirs(os.path.join(BASE_DIR, 'media/reports/pdf'), exist_ok=True)
+os.makedirs(os.path.join(BASE_DIR, 'media/reports/video'), exist_ok=True)
 
 # Security settings for production
 if not DEBUG:

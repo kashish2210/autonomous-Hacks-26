@@ -1,0 +1,537 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}YouTube Analyzer - Source Analyzer{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ... (keep all your existing CSS) ... */
+    .analyzer-container {
+        max-width: 1400px;
+        margin: 2rem auto;
+        padding: 2rem;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .page-header h1 {
+        font-size: 2.5rem;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .page-header p {
+        font-size: 1.1rem;
+        color: var(--text-secondary);
+    }
+
+    .workflow-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .workflow-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border: 2px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
+
+    .workflow-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .workflow-card.active {
+        border-color: #6366f1;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+    }
+
+    .workflow-step {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .step-number {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    .step-content h3 {
+        font-size: 1.2rem;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .step-content p {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .main-section {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+
+    .input-section {
+        margin-bottom: 2rem;
+    }
+
+    .input-section label {
+        display: block;
+        margin-bottom: 0.75rem;
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .url-input-wrapper {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .url-input-wrapper input {
+        flex: 1;
+        padding: 1rem 1.5rem;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        transition: all 0.3s ease;
+    }
+
+    .url-input-wrapper input:focus {
+        outline: none;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .btn {
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .video-container {
+        display: none;
+        margin-bottom: 2rem;
+    }
+
+    .video-container.active {
+        display: block;
+    }
+
+    .video-wrapper {
+        position: relative;
+        padding-bottom: 56.25%;
+        height: 0;
+        overflow: hidden;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .video-wrapper iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    .transcript-section {
+        display: none;
+        margin-top: 2rem;
+    }
+
+    .transcript-section.active {
+        display: block;
+    }
+
+    .transcript-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .transcript-header h3 {
+        font-size: 1.5rem;
+        color: var(--text-primary);
+    }
+
+    .transcript-box {
+        background: var(--bg-primary);
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.5rem;
+        max-height: 400px;
+        overflow-y: auto;
+        line-height: 1.8;
+        color: var(--text-primary);
+    }
+
+    .loading-state {
+        display: none;
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .loading-state.active {
+        display: block;
+    }
+
+    .spinner {
+        border: 4px solid rgba(99, 102, 241, 0.1);
+        border-top: 4px solid #6366f1;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+        font-size: 1.1rem;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .loading-subtext {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .agent-status {
+        display: none;
+        margin-top: 1rem;
+        padding: 1rem;
+        background: rgba(99, 102, 241, 0.05);
+        border-radius: 8px;
+        border-left: 4px solid #6366f1;
+    }
+
+    .agent-status.active {
+        display: block;
+    }
+
+    .agent-status p {
+        margin: 0.5rem 0;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+    }
+
+    @media (max-width: 768px) {
+        .analyzer-container {
+            padding: 1rem;
+        }
+
+        .workflow-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .url-input-wrapper {
+            flex-direction: column;
+        }
+
+        .url-input-wrapper input {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="analyzer-container">
+    <div class="page-header">
+        <h1>YouTube Transcript Analyzer</h1>
+        <p>Extract, analyze, and verify claims from YouTube videos using AI agents</p>
+    </div>
+
+    <div class="workflow-grid">
+        <div class="workflow-card" id="step1Card">
+            <div class="workflow-step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Extract Transcript</h3>
+                    <p>Fetch video transcript automatically</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="workflow-card" id="step2Card">
+            <div class="workflow-step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Identify Claims</h3>
+                    <p>AI extracts factual claims from text</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="workflow-card" id="step3Card">
+            <div class="workflow-step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Verify Facts</h3>
+                    <p>Search and validate claims online</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-section">
+        <div class="input-section">
+            <label for="youtubeUrl">YouTube Video URL</label>
+            <div class="url-input-wrapper">
+                <input 
+                    type="url" 
+                    id="youtubeUrl" 
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    value=""
+                />
+                <button class="btn btn-primary" id="loadVideoBtn">
+                    Load Video
+                </button>
+            </div>
+        </div>
+
+        <div class="video-container" id="videoContainer">
+            <div class="video-wrapper" id="videoWrapper"></div>
+        </div>
+
+        <div class="loading-state" id="loadingState">
+            <div class="spinner"></div>
+            <p class="loading-text" id="loadingText">Processing...</p>
+            <p class="loading-subtext" id="loadingSubtext">Please wait</p>
+            <div class="agent-status" id="agentStatus"></div>
+        </div>
+
+        <div class="transcript-section" id="transcriptSection">
+            <div class="transcript-header">
+                <h3>Transcript</h3>
+                <button class="btn btn-primary" id="extractClaimsBtn">
+                    Extract & Verify Claims
+                </button>
+            </div>
+            <div class="transcript-box" id="transcriptBox"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden form for claims extraction -->
+<form id="claimsForm" method="post" action="{% url 'extract_claims' %}" style="display: none;">
+    {% csrf_token %}
+    <input type="text" name="content" id="hiddenContent">
+</form>
+
+{% csrf_token %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const loadVideoBtn = document.getElementById('loadVideoBtn');
+    const extractClaimsBtn = document.getElementById('extractClaimsBtn');
+    const youtubeUrlInput = document.getElementById('youtubeUrl');
+    const videoContainer = document.getElementById('videoContainer');
+    const videoWrapper = document.getElementById('videoWrapper');
+    const transcriptSection = document.getElementById('transcriptSection');
+    const transcriptBox = document.getElementById('transcriptBox');
+    const loadingState = document.getElementById('loadingState');
+    const loadingText = document.getElementById('loadingText');
+    const loadingSubtext = document.getElementById('loadingSubtext');
+    const agentStatus = document.getElementById('agentStatus');
+    const claimsForm = document.getElementById('claimsForm');
+    const hiddenContent = document.getElementById('hiddenContent');
+
+    let currentVideoId = null;
+    let currentTranscript = null;
+
+    function extractVideoId(url) {
+        const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[7].length === 11) ? match[7] : null;
+    }
+
+    function showLoading(text, subtext) {
+        loadingState.classList.add('active');
+        loadingText.textContent = text;
+        loadingSubtext.textContent = subtext;
+    }
+
+    function hideLoading() {
+        loadingState.classList.remove('active');
+        agentStatus.classList.remove('active');
+        agentStatus.innerHTML = '';
+    }
+
+    function updateAgentStatus(message) {
+        agentStatus.classList.add('active');
+        const p = document.createElement('p');
+        p.textContent = message;
+        agentStatus.appendChild(p);
+    }
+
+    function activateStep(stepNumber) {
+        for (let i = 1; i <= 3; i++) {
+            document.getElementById(`step${i}Card`).classList.remove('active');
+        }
+        document.getElementById(`step${stepNumber}Card`).classList.add('active');
+    }
+
+    loadVideoBtn.addEventListener('click', async () => {
+        const url = youtubeUrlInput.value.trim();
+        if (!url) {
+            alert('Please enter a YouTube URL');
+            return;
+        }
+
+        currentVideoId = extractVideoId(url);
+        if (!currentVideoId) {
+            alert('Invalid YouTube URL');
+            return;
+        }
+
+        activateStep(1);
+        showLoading('Loading video and transcript...', 'This may take a moment');
+
+        // Embed video using YouTube's no-cookie domain for better privacy
+        videoWrapper.innerHTML = `
+            <iframe 
+                src="https://www.youtube-nocookie.com/embed/${currentVideoId}"
+                title="YouTube video player"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen>
+            </iframe>
+        `;
+        videoContainer.classList.add('active');
+
+        // Fetch transcript
+        try {
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            const response = await fetch('/agent/load-transcript/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ url: url })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                const text = await response.text();
+                console.error('Response is not JSON:', text.substring(0, 200));
+                throw new Error('Server returned invalid response format');
+            }
+
+            const data = await response.json();
+            
+            if (data.success) {
+                currentTranscript = data.transcript;
+                transcriptBox.textContent = data.transcript;
+                transcriptSection.classList.add('active');
+                hideLoading();
+                
+                // Show success message
+                updateAgentStatus('✓ Transcript loaded successfully! Click "Extract & Verify Claims" to analyze.');
+                setTimeout(() => {
+                    agentStatus.classList.remove('active');
+                }, 3000);
+            } else {
+                alert('Failed to load transcript: ' + data.error);
+                hideLoading();
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            alert('Error: ' + error.message);
+            hideLoading();
+        }
+    });
+
+    extractClaimsBtn.addEventListener('click', () => {
+        if (!currentTranscript) {
+            alert('No transcript available');
+            return;
+        }
+
+        activateStep(2);
+        showLoading('Extracting and verifying claims...', 'This may take 30-60 seconds');
+        updateAgentStatus('Step 1: Analyzing transcript and extracting factual claims...');
+        
+        setTimeout(() => {
+            updateAgentStatus('Step 2: Searching online sources for verification...');
+        }, 2000);
+
+        setTimeout(() => {
+            updateAgentStatus('Step 3: Validating claims against sources...');
+        }, 4000);
+
+        // Submit the form with the transcript
+        hiddenContent.value = currentTranscript;
+        claimsForm.submit();
+    });
+
+    // Initial character count if textarea has value
+    if (transcriptBox.textContent) {
+        currentTranscript = transcriptBox.textContent;
+    }
+</script>
+{% endblock %}

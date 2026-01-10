@@ -10,6 +10,14 @@ langchain
 openai
 langchain-groq
 groq
+google-search-results
+langchain_community
+google-api-python-client
+duckduckgo-search
+youtube-transcript-api
+Pillow
+google-generativeai
+reportlab
 nltk
 langchain-community
 psycopg2-binary

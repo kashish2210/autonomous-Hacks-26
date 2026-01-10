@@ -11,32 +11,42 @@
         padding: 2rem;
     }
 
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .page-header h1 {
+        font-size: 2.5rem;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .page-header p {
+        font-size: 1.1rem;
+        color: var(--text-secondary);
+    }
+
     .form-section {
         background: var(--card-bg);
         border-radius: 12px;
-        padding: 2rem;
+        padding: 2.5rem;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        position: relative;
+        border: 2px solid var(--border-color);
     }
 
-    .form-section h2 {
-        margin-bottom: 1.5rem;
-        color: var(--text-primary);
-        font-size: 1.8rem;
-    }
-
-    /* Error messages */
     .alert {
         padding: 1rem 1.5rem;
         border-radius: 8px;
         margin-bottom: 1.5rem;
         font-size: 1rem;
         line-height: 1.5;
+        border-left: 4px solid;
     }
 
     .alert-error {
         background: rgba(239, 68, 68, 0.1);
-        border: 2px solid #ef4444;
+        border-color: #ef4444;
         color: #dc2626;
     }
 
@@ -44,110 +54,66 @@
         list-style: none;
         padding: 0;
         margin: 0.5rem 0;
-        color: #dc2626;
-        font-size: 0.9rem;
     }
 
     .errorlist li {
         background: rgba(220, 38, 38, 0.1);
-        padding: 0.5rem;
+        padding: 0.5rem 0.75rem;
         border-radius: 4px;
         margin-bottom: 0.5rem;
+        color: #dc2626;
+        font-size: 0.9rem;
     }
 
-    .text-input-wrapper {
-        position: relative;
-        margin-bottom: 1.5rem;
+    .input-group {
+        margin-bottom: 2rem;
     }
 
-    .text-input-wrapper label {
+    .input-group label {
         display: block;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.75rem;
         color: var(--text-primary);
         font-weight: 600;
         font-size: 1.1rem;
     }
 
-    .text-input-wrapper textarea {
+    .textarea-wrapper {
+        position: relative;
+    }
+
+    .textarea-wrapper textarea {
         width: 100%;
-        min-height: 300px;
+        min-height: 350px;
         padding: 1.5rem;
         border: 2px solid var(--border-color);
         border-radius: 8px;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         font-size: 1rem;
-        line-height: 1.6;
+        line-height: 1.8;
         resize: vertical;
-        background: 
-            linear-gradient(90deg, rgba(200, 200, 255, 0.1) 1px, transparent 1px),
-            linear-gradient(rgba(200, 200, 255, 0.1) 1px, transparent 1px);
-        background-size: 20px 20px;
-        background-color: var(--bg-primary);
+        background: var(--bg-primary);
         color: var(--text-primary);
         transition: all 0.3s ease;
     }
 
-    .text-input-wrapper textarea:focus {
+    .textarea-wrapper textarea:focus {
         outline: none;
-        border-color: var(--primary-color);
+        border-color: #6366f1;
         box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
     }
 
-    .submit-btn {
-        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-        color: white;
-        border: none;
-        padding: 1rem 2.5rem;
-        font-size: 1.1rem;
-        font-weight: 600;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    .char-counter {
+        position: absolute;
+        bottom: 1rem;
+        right: 1rem;
+        background: var(--card-bg);
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
     }
 
-    .submit-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
-    }
-
-    .submit-btn:active {
-        transform: translateY(0);
-    }
-
-    .submit-btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none;
-    }
-
-    /* Loading state */
-    .loading {
-        display: none;
-        text-align: center;
-        margin: 2rem 0;
-    }
-
-    .loading.active {
-        display: block;
-    }
-
-    .spinner {
-        border: 4px solid rgba(99, 102, 241, 0.1);
-        border-top: 4px solid #6366f1;
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        animation: spin 1s linear infinite;
-        margin: 0 auto 1rem;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    /* Help text */
     .helptext {
         display: block;
         margin-top: 0.5rem;
@@ -155,14 +121,206 @@
         font-size: 0.9rem;
     }
 
-    /* Responsive */
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .btn {
+        padding: 1rem 2.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-secondary {
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        border: 2px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+        border-color: #6366f1;
+        color: #6366f1;
+    }
+
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .loading-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .loading-overlay.active {
+        display: flex;
+    }
+
+    .loading-content {
+        background: var(--card-bg);
+        padding: 3rem;
+        border-radius: 12px;
+        text-align: center;
+        max-width: 500px;
+        width: 90%;
+    }
+
+    .spinner {
+        border: 4px solid rgba(99, 102, 241, 0.1);
+        border-top: 4px solid #6366f1;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1.5rem;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .loading-content h3 {
+        font-size: 1.5rem;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .loading-content p {
+        color: var(--text-secondary);
+        font-size: 1rem;
+    }
+
+    .progress-steps {
+        margin-top: 2rem;
+        text-align: left;
+    }
+
+    .progress-step {
+        padding: 0.75rem;
+        margin: 0.5rem 0;
+        border-radius: 6px;
+        background: rgba(99, 102, 241, 0.05);
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .progress-step.active {
+        background: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+        font-weight: 600;
+    }
+
+    .progress-step.completed {
+        background: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+    }
+
+    .progress-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+    }
+
+    .progress-step.active .progress-icon {
+        background: #6366f1;
+        color: white;
+    }
+
+    .progress-step.completed .progress-icon {
+        background: #22c55e;
+        color: white;
+    }
+
+    .examples-section {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: rgba(99, 102, 241, 0.05);
+        border-radius: 8px;
+        border-left: 4px solid #6366f1;
+    }
+
+    .examples-section h4 {
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+    }
+
+    .example-text {
+        background: var(--bg-primary);
+        padding: 1rem;
+        border-radius: 6px;
+        margin-bottom: 0.75rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid var(--border-color);
+    }
+
+    .example-text:hover {
+        border-color: #6366f1;
+        transform: translateX(4px);
+    }
+
+    .example-text p {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+
     @media (max-width: 768px) {
         .claims-container {
             padding: 1rem;
         }
-        
+
         .form-section {
             padding: 1.5rem;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
         }
     }
 </style>
@@ -170,10 +328,12 @@
 
 {% block content %}
 <div class="claims-container">
+    <div class="page-header">
+        <h1>Text Claims Analyzer</h1>
+        <p>Extract and verify factual claims from any text using AI agents</p>
+    </div>
+
     <div class="form-section">
-        <h2>📝 Extract Claims from Text</h2>
-        
-        <!-- Error Message -->
         {% if error_message %}
         <div class="alert alert-error">
             {{ error_message }}
@@ -183,23 +343,70 @@
         <form method="post" id="claimsForm">
             {% csrf_token %}
             
-            <div class="text-input-wrapper">
+            <div class="input-group">
                 {{ form.content.errors }}
-                {{ form.content.label_tag }}
-                {{ form.content }}
+                <label for="{{ form.content.id_for_label }}">
+                    Paste your text content
+                </label>
+                <div class="textarea-wrapper">
+                    {{ form.content }}
+                    <div class="char-counter">
+                        <span id="charCount">0</span> characters
+                    </div>
+                </div>
                 {% if form.content.help_text %}
                     <span class="helptext">{{ form.content.help_text }}</span>
                 {% endif %}
             </div>
             
-            <button type="submit" class="submit-btn" id="submitBtn">
-                🔍 Extract Claims
-            </button>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    Analyze & Extract Claims
+                </button>
+                <button type="button" class="btn btn-secondary" id="clearBtn">
+                    Clear
+                </button>
+            </div>
         </form>
 
-        <div class="loading" id="loadingIndicator">
-            <div class="spinner"></div>
-            <p>Analyzing text and extracting claims...</p>
+        <div class="examples-section">
+            <h4>Try these examples</h4>
+            <div class="example-text" data-example="1">
+                <p>The Earth's atmosphere is composed of 78% nitrogen, 21% oxygen, and trace amounts of other gases. Mount Everest is the tallest mountain on Earth, standing at 8,849 meters above sea level.</p>
+            </div>
+            <div class="example-text" data-example="2">
+                <p>Recent studies show that regular exercise can reduce the risk of heart disease by up to 35%. The World Health Organization recommends at least 150 minutes of moderate exercise per week for adults.</p>
+            </div>
+            <div class="example-text" data-example="3">
+                <p>The Great Wall of China is over 13,000 miles long and was built over several centuries. It is visible from space with the naked eye, making it one of humanity's greatest architectural achievements.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <h3>Processing Your Text</h3>
+        <p>Our AI agents are working on your request</p>
+        
+        <div class="progress-steps">
+            <div class="progress-step" id="step1">
+                <div class="progress-icon">1</div>
+                <span>Parsing text structure</span>
+            </div>
+            <div class="progress-step" id="step2">
+                <div class="progress-icon">2</div>
+                <span>Extracting factual claims</span>
+            </div>
+            <div class="progress-step" id="step3">
+                <div class="progress-icon">3</div>
+                <span>Searching online sources</span>
+            </div>
+            <div class="progress-step" id="step4">
+                <div class="progress-icon">4</div>
+                <span>Verifying claims</span>
+            </div>
         </div>
     </div>
 </div>
@@ -207,19 +414,59 @@
 
 {% block extra_js %}
 <script>
-    document.getElementById('claimsForm').addEventListener('submit', function(e) {
-        // Show loading indicator
-        document.getElementById('loadingIndicator').classList.add('active');
+    const form = document.getElementById('claimsForm');
+    const textarea = document.querySelector('textarea');
+    const charCount = document.getElementById('charCount');
+    const submitBtn = document.getElementById('submitBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const examples = document.querySelectorAll('.example-text');
+
+    // Character counter
+    textarea.addEventListener('input', () => {
+        charCount.textContent = textarea.value.length;
+    });
+
+    // Clear button
+    clearBtn.addEventListener('click', () => {
+        textarea.value = '';
+        charCount.textContent = '0';
+    });
+
+    // Example texts
+    examples.forEach(example => {
+        example.addEventListener('click', () => {
+            textarea.value = example.querySelector('p').textContent;
+            charCount.textContent = textarea.value.length;
+            textarea.focus();
+        });
+    });
+
+    // Form submission with animation
+    form.addEventListener('submit', function(e) {
+        // Show loading overlay
+        loadingOverlay.classList.add('active');
         
         // Disable submit button
-        const submitBtn = document.getElementById('submitBtn');
         submitBtn.disabled = true;
-        submitBtn.textContent = '⏳ Processing...';
         
-        // Add animation to text area
-        const textInput = document.querySelector('textarea');
-        textInput.style.pointerEvents = 'none';
-        textInput.style.opacity = '0.6';
+        // Simulate progress steps
+        let currentStep = 1;
+        const stepInterval = setInterval(() => {
+            if (currentStep > 1) {
+                document.getElementById(`step${currentStep - 1}`).classList.remove('active');
+                document.getElementById(`step${currentStep - 1}`).classList.add('completed');
+            }
+            if (currentStep <= 4) {
+                document.getElementById(`step${currentStep}`).classList.add('active');
+                currentStep++;
+            } else {
+                clearInterval(stepInterval);
+            }
+        }, 1500);
     });
+
+    // Initialize character count
+    charCount.textContent = textarea.value.length;
 </script>
 {% endblock %}

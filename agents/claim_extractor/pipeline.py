@@ -16,10 +16,7 @@ def run_pipeline(text: str):
         if normalized:
             store.add_claim(normalized)
 
-    return {
-        "sentences": sentences,
-        "claims": store.all()
-    }
+    return store
 
 
 if __name__ == "__main__":

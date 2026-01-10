@@ -1,0 +1,374 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 2rem;
+    }
+    
+    .form-header {
+        margin-bottom: 2rem;
+    }
+    
+    .form-header h1 {
+        font-size: 2rem;
+        color: #1a1a1a;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-header p {
+        color: #666;
+        font-size: 1rem;
+    }
+    
+    .claim-form {
+        background: white;
+        padding: 2.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-row.full {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .form-group label {
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #333;
+        font-size: 0.95rem;
+    }
+    
+    .form-group label.required::after {
+        content: ' *';
+        color: #dc3545;
+    }
+    
+    .form-control, .form-select {
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+    }
+    
+    textarea.form-control {
+        resize: vertical;
+        font-family: inherit;
+    }
+    
+    .help-text {
+        font-size: 0.85rem;
+        color: #666;
+        margin-top: 0.25rem;
+    }
+    
+    .error-message {
+        color: #dc3545;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #eee;
+    }
+    
+    .btn {
+        padding: 0.75rem 2rem;
+        border: none;
+        border-radius: 6px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .btn-primary {
+        background: #007bff;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #0056b3;
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background: #545b62;
+    }
+    
+    .status-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+    }
+    
+    .status-pending { background: #17a2b8; }
+    .status-verified { background: #28a745; }
+    .status-false { background: #dc3545; }
+    .status-misleading { background: #ffc107; }
+    
+    .tag-input-wrapper {
+        position: relative;
+    }
+    
+    .tag-suggestions {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #ddd;
+        border-top: none;
+        border-radius: 0 0 4px 4px;
+        max-height: 200px;
+        overflow-y: auto;
+        display: none;
+        z-index: 1000;
+    }
+    
+    .tag-suggestion {
+        padding: 0.5rem 0.75rem;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    
+    .tag-suggestion:hover {
+        background: #f8f9fa;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-header">
+        <h1>{% if claim %}Edit Claim{% else %}Add New Claim{% endif %}</h1>
+        <p>{% if claim %}Update claim details and verification status{% else %}Create a new claim for verification{% endif %}</p>
+    </div>
+    
+    <form class="claim-form" id="claimForm" method="POST">
+        {% csrf_token %}
+        
+        <div class="form-row full">
+            <div class="form-group">
+                <label for="{{ form.title.id_for_label }}" class="required">Claim Title</label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <span class="error-message">{{ form.title.errors.0 }}</span>
+                {% endif %}
+                <span class="help-text">Brief, descriptive title for the claim</span>
+            </div>
+        </div>
+        
+        <div class="form-row full">
+            <div class="form-group">
+                <label for="{{ form.content.id_for_label }}" class="required">Claim Content</label>
+                {{ form.content }}
+                {% if form.content.errors %}
+                    <span class="error-message">{{ form.content.errors.0 }}</span>
+                {% endif %}
+                <span class="help-text">Full text of the claim being analyzed</span>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.status.id_for_label }}">Verification Status</label>
+                <select id="{{ form.status.id_for_label }}" name="{{ form.status.name }}" class="form-select">
+                    {% for value, label in form.status.field.choices %}
+                    <option value="{{ value }}" {% if form.status.value == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+                {% if form.status.errors %}
+                    <span class="error-message">{{ form.status.errors.0 }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.language.id_for_label }}">Language</label>
+                {{ form.language }}
+                {% if form.language.errors %}
+                    <span class="error-message">{{ form.language.errors.0 }}</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.source_url.id_for_label }}">Source URL</label>
+                {{ form.source_url }}
+                {% if form.source_url.errors %}
+                    <span class="error-message">{{ form.source_url.errors.0 }}</span>
+                {% endif %}
+                <span class="help-text">Original source of the claim (optional)</span>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.source_type.id_for_label }}">Source Type</label>
+                {{ form.source_type }}
+                {% if form.source_type.errors %}
+                    <span class="error-message">{{ form.source_type.errors.0 }}</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-row full">
+            <div class="form-group">
+                <label for="{{ form.verification_notes.id_for_label }}">Verification Notes</label>
+                {{ form.verification_notes }}
+                {% if form.verification_notes.errors %}
+                    <span class="error-message">{{ form.verification_notes.errors.0 }}</span>
+                {% endif %}
+                <span class="help-text">Evidence, sources, and context supporting the verification status</span>
+            </div>
+        </div>
+        
+        <div class="form-row full">
+            <div class="form-group">
+                <label for="{{ form.tags.id_for_label }}">Tags</label>
+                <div class="tag-input-wrapper">
+                    {{ form.tags }}
+                    <div class="tag-suggestions" id="tagSuggestions"></div>
+                </div>
+                {% if form.tags.errors %}
+                    <span class="error-message">{{ form.tags.errors.0 }}</span>
+                {% endif %}
+                <span class="help-text">Comma-separated tags (e.g., politics, health, economy)</span>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="window.history.back()">
+                Cancel
+            </button>
+            <button type="submit" class="btn btn-primary">
+                {% if claim %}Update Claim{% else %}Create Claim{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Common tags for suggestions
+    const commonTags = [
+        'politics', 'health', 'economy', 'science', 'technology',
+        'climate', 'education', 'entertainment', 'sports', 'business',
+        'international', 'local', 'breaking news', 'analysis'
+    ];
+    
+    // Tag autocomplete
+    const tagInput = document.getElementById('{{ form.tags.id_for_label }}');
+    const tagSuggestions = document.getElementById('tagSuggestions');
+    
+    if (tagInput) {
+        tagInput.addEventListener('input', (e) => {
+            const value = e.target.value.toLowerCase();
+            const lastTag = value.split(',').pop().trim();
+            
+            if (lastTag.length > 0) {
+                const matches = commonTags.filter(tag => 
+                    tag.toLowerCase().includes(lastTag)
+                );
+                
+                if (matches.length > 0) {
+                    tagSuggestions.innerHTML = matches
+                        .map(tag => `<div class="tag-suggestion" data-tag="${tag}">${tag}</div>`)
+                        .join('');
+                    tagSuggestions.style.display = 'block';
+                } else {
+                    tagSuggestions.style.display = 'none';
+                }
+            } else {
+                tagSuggestions.style.display = 'none';
+            }
+        });
+        
+        tagSuggestions.addEventListener('click', (e) => {
+            if (e.target.classList.contains('tag-suggestion')) {
+                const tag = e.target.dataset.tag;
+                const currentValue = tagInput.value;
+                const tags = currentValue.split(',').map(t => t.trim());
+                tags[tags.length - 1] = tag;
+                tagInput.value = tags.join(', ') + ', ';
+                tagSuggestions.style.display = 'none';
+                tagInput.focus();
+            }
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (!tagInput.contains(e.target) && !tagSuggestions.contains(e.target)) {
+                tagSuggestions.style.display = 'none';
+            }
+        });
+    }
+    
+    // Form submission
+    document.getElementById('claimForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        
+        try {
+            const response = await fetch(e.target.action || window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                alert(data.message || 'Claim saved successfully');
+                window.location.href = '/notes/';
+            } else {
+                let errorMsg = 'Failed to save claim:\n';
+                for (let field in data.errors) {
+                    errorMsg += `${field}: ${data.errors[field].join(', ')}\n`;
+                }
+                alert(errorMsg);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while saving the claim');
+        }
+    });
+</script>
+{% endblock %}

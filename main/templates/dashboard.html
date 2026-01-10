@@ -1,116 +1,925 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Dashboard - Home{% endblock %}
+{% block title %}FactCheck AI - Intelligent News Verification{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+    :root {
+        --primary: #6366f1;
+        --primary-light: #818cf8;
+        --primary-dark: #4f46e5;
+        --secondary: #8b5cf6;
+        --accent: #ec4899;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --dark: #0f172a;
+        --dark-light: #1e293b;
+        --gray: #64748b;
+        --light: #f8fafc;
+        --white: #ffffff;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: var(--light);
+        overflow-x: hidden;
+    }
+
+    /* Animated Background */
+    .bg-animation {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        opacity: 0.4;
+    }
+
+    .bg-gradient-1 {
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%);
+        top: -200px;
+        left: -200px;
+        animation: float-1 20s ease-in-out infinite;
+    }
+
+    .bg-gradient-2 {
+        position: absolute;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, transparent 70%);
+        bottom: -150px;
+        right: -150px;
+        animation: float-2 18s ease-in-out infinite;
+    }
+
+    .bg-gradient-3 {
+        position: absolute;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(236, 72, 153, 0.2) 0%, transparent 70%);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        animation: float-3 22s ease-in-out infinite;
+    }
+
+    @keyframes float-1 {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(100px, 50px) scale(1.1); }
+        66% { transform: translate(-50px, 100px) scale(0.9); }
+    }
+
+    @keyframes float-2 {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(-80px, -60px) scale(1.05); }
+        66% { transform: translate(40px, -100px) scale(0.95); }
+    }
+
+    @keyframes float-3 {
+        0%, 100% { transform: translate(-50%, -50%) scale(1); }
+        50% { transform: translate(-50%, -60%) scale(1.15); }
+    }
+
+    /* Container */
+    .container {
+        position: relative;
+        z-index: 1;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+
+    /* Hero Section */
+    .hero {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1.5rem;
+        background: rgba(99, 102, 241, 0.1);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        border-radius: 50px;
+        color: var(--primary-light);
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 2rem;
+        animation: fade-in-up 0.8s ease-out;
+    }
+
+    .hero-badge-dot {
+        width: 8px;
+        height: 8px;
+        background: var(--success);
+        border-radius: 50%;
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.2); }
+    }
+
+    .hero-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 5rem;
+        font-weight: 800;
+        line-height: 1.1;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 50%, #c4b5fd 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: fade-in-up 0.8s ease-out 0.2s both;
+    }
+
+    .hero-subtitle {
+        font-size: 1.5rem;
+        color: var(--gray);
+        margin-bottom: 1rem;
+        min-height: 2.5rem;
+        animation: fade-in-up 0.8s ease-out 0.4s both;
+    }
+
+    .typing-text {
+        display: inline-block;
+        color: var(--primary-light);
+        font-weight: 500;
+        border-right: 3px solid var(--primary-light);
+        padding-right: 5px;
+        animation: blink 0.7s step-end infinite;
+    }
+
+    @keyframes blink {
+        0%, 50% { border-color: var(--primary-light); }
+        51%, 100% { border-color: transparent; }
+    }
+
+    .hero-description {
+        font-size: 1.2rem;
+        color: var(--gray);
+        max-width: 700px;
+        margin: 0 auto 3rem;
+        line-height: 1.8;
+        animation: fade-in-up 0.8s ease-out 0.6s both;
+    }
+
+    @keyframes fade-in-up {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .hero-buttons {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        animation: fade-in-up 0.8s ease-out 0.8s both;
+    }
+
+    .btn {
+        padding: 1.2rem 2.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 12px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        color: white;
+        box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-primary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-primary:hover::before {
+        left: 100%;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 40px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.05);
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+    }
+
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--primary);
+        transform: translateY(-3px);
+    }
+
+    /* Stats Section */
+    .stats-section {
+        padding: 6rem 2rem;
+        animation: fade-in 1s ease-out;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .stat-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 2.5rem 2rem;
+        text-align: center;
+        transition: all 0.4s ease;
+        animation: fade-in-up 0.6s ease-out both;
+    }
+
+    .stat-card:nth-child(1) { animation-delay: 0.1s; }
+    .stat-card:nth-child(2) { animation-delay: 0.2s; }
+    .stat-card:nth-child(3) { animation-delay: 0.3s; }
+    .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+    .stat-card:hover {
+        transform: translateY(-10px);
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--primary);
+        box-shadow: 0 20px 60px rgba(99, 102, 241, 0.2);
+    }
+
+    .stat-number {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 3.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--primary-light), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 1.1rem;
+        color: var(--gray);
+        font-weight: 500;
+    }
+
+    /* Section Title */
+    .section {
+        padding: 8rem 2rem;
+    }
+
+    .section-header {
+        text-align: center;
+        margin-bottom: 5rem;
+        animation: fade-in-up 0.8s ease-out;
+    }
+
+    .section-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .section-subtitle {
+        font-size: 1.3rem;
+        color: var(--gray);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* Problem Cards */
+    .problem-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .problem-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 3rem;
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+        animation: fade-in-up 0.6s ease-out both;
+    }
+
+    .problem-card:nth-child(1) { animation-delay: 0.1s; }
+    .problem-card:nth-child(2) { animation-delay: 0.2s; }
+    .problem-card:nth-child(3) { animation-delay: 0.3s; }
+    .problem-card:nth-child(4) { animation-delay: 0.4s; }
+    .problem-card:nth-child(5) { animation-delay: 0.5s; }
+    .problem-card:nth-child(6) { animation-delay: 0.6s; }
+
+    .problem-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+        transform: scaleX(0);
+        transition: transform 0.4s ease;
+    }
+
+    .problem-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .problem-card:hover {
+        transform: translateY(-10px);
+        border-color: var(--primary);
+        box-shadow: 0 20px 60px rgba(99, 102, 241, 0.2);
+    }
+
+    .problem-icon {
+        font-size: 3rem;
+        margin-bottom: 1.5rem;
+        display: inline-block;
+        animation: bounce-in 0.6s ease-out;
+    }
+
+    @keyframes bounce-in {
+        0% { transform: scale(0); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+
+    .problem-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: white;
+    }
+
+    .problem-description {
+        color: var(--gray);
+        line-height: 1.8;
+        font-size: 1.05rem;
+    }
+
+    /* Features Section */
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .feature-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 2.5rem;
+        text-align: center;
+        transition: all 0.4s ease;
+        animation: fade-in-up 0.6s ease-out both;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        border-color: var(--primary);
+        box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);
+    }
+
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        transition: all 0.4s ease;
+    }
+
+    .feature-card:hover .feature-icon {
+        transform: rotateY(360deg);
+    }
+
+    .feature-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: white;
+    }
+
+    .feature-description {
+        color: var(--gray);
+        line-height: 1.7;
+    }
+
+    /* Architecture Flow */
+    .architecture-flow {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .flow-item {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        transition: all 0.4s ease;
+        animation: fade-in-left 0.6s ease-out both;
+    }
+
+    .flow-item:nth-child(even) {
+        animation: fade-in-right 0.6s ease-out both;
+    }
+
+    @keyframes fade-in-left {
+        from {
+            opacity: 0;
+            transform: translateX(-50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes fade-in-right {
+        from {
+            opacity: 0;
+            transform: translateX(50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .flow-item:hover {
+        border-color: var(--primary);
+        box-shadow: 0 10px 40px rgba(99, 102, 241, 0.2);
+        transform: scale(1.02);
+    }
+
+    .flow-number {
+        width: 70px;
+        height: 70px;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        font-weight: 800;
+        font-family: 'Space Grotesk', sans-serif;
+        flex-shrink: 0;
+        box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+    }
+
+    .flow-content h3 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        color: white;
+    }
+
+    .flow-content p {
+        color: var(--gray);
+        line-height: 1.7;
+    }
+
+    /* CTA Section */
+    .cta-section {
+        padding: 8rem 2rem;
+        text-align: center;
+    }
+
+    .cta-box {
+        max-width: 900px;
+        margin: 0 auto;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(99, 102, 241, 0.3);
+        border-radius: 30px;
+        padding: 5rem 3rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cta-box::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+        animation: rotate 20s linear infinite;
+    }
+
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .cta-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .cta-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .cta-subtitle {
+        font-size: 1.3rem;
+        color: var(--gray);
+        margin-bottom: 3rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 3rem;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+        }
+
+        .problem-grid,
+        .features-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .flow-item {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .hero-buttons {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+        }
+
+        .cta-title {
+            font-size: 2rem;
+        }
+    }
+
+    @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
+<!-- Animated Background -->
+<div class="bg-animation">
+    <div class="bg-gradient-1"></div>
+    <div class="bg-gradient-2"></div>
+    <div class="bg-gradient-3"></div>
+</div>
+
 <div class="container">
     <!-- Hero Section -->
-    <section class="hero-section">
-        <div class="hero-content">
-            <h1 class="hero-title">
-                <span class="title-line">STRENGTHS</span>
-            </h1>
-            <div class="hero-bars">
-                <div class="bar" style="width: 85%;"></div>
-                <div class="bar" style="width: 70%;"></div>
-                <div class="bar" style="width: 78%;"></div>
-                <div class="bar" style="width: 92%;"></div>
+    <section class="hero">
+        <div class="hero-badge">
+            <span class="hero-badge-dot"></span>
+            <span>AI-Powered Fact Verification System</span>
+        </div>
+
+        <h1 class="hero-title">
+            Verify The Truth<br>With Intelligence
+        </h1>
+
+        <div class="hero-subtitle">
+            <span class="typing-text" id="typingText"></span>
+        </div>
+
+        <p class="hero-description">
+            Transform unstructured news into verified, explainable insights through autonomous multi-agent processing. Extract claims, detect contradictions, and verify facts at scale.
+        </p>
+
+        <div class="hero-buttons">
+            <a href="{% url 'extract_claims' %}" class="btn btn-primary">
+                Start Analyzing
+                <span>→</span>
+            </a>
+            <a href="{% url 'yt_analyzer' %}" class="btn btn-secondary">
+                Analyze YouTube Video
+            </a>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" data-count="1000">0</div>
+                <div class="stat-label">Claims Analyzed Daily</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">6</div>
+                <div class="stat-label">Autonomous AI Agents</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">99.5%</div>
+                <div class="stat-label">Accuracy Rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">&lt;30s</div>
+                <div class="stat-label">Average Verification Time</div>
             </div>
         </div>
     </section>
 
-    <!-- Stats Grid -->
-    <section class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-icon">📊</div>
-            <h3 class="stat-title">Projects</h3>
-            <p class="stat-value">24</p>
-            <p class="stat-change positive">+12%</p>
+    <!-- Problem Section -->
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">The Challenge We Solve</h2>
+            <p class="section-subtitle">Modern news verification faces unprecedented complexity at scale</p>
         </div>
-        
-        <div class="stat-card">
-            <div class="stat-icon">👥</div>
-            <h3 class="stat-title">Team Members</h3>
-            <p class="stat-value">18</p>
-            <p class="stat-change positive">+3</p>
-        </div>
-        
-        <div class="stat-card">
-            <div class="stat-icon">✓</div>
-            <h3 class="stat-title">Completed</h3>
-            <p class="stat-value">156</p>
-            <p class="stat-change positive">+8%</p>
-        </div>
-        
-        <div class="stat-card">
-            <div class="stat-icon">⏰</div>
-            <h3 class="stat-title">In Progress</h3>
-            <p class="stat-value">12</p>
-            <p class="stat-change neutral">0%</p>
+
+        <div class="problem-grid">
+            <div class="problem-card">
+                <div class="problem-icon">⚡</div>
+                <h3 class="problem-title">Information Overload</h3>
+                <p class="problem-description">
+                    Thousands of articles, transcripts, and social posts published daily. Manual fact-checking cannot keep pace with exponential content growth.
+                </p>
+            </div>
+
+            <div class="problem-card">
+                <div class="problem-icon">🎯</div>
+                <h3 class="problem-title">Document-Level Limitations</h3>
+                <p class="problem-description">
+                    Current tools analyze entire articles as single units, missing individual factual claims hidden within complex narratives and context.
+                </p>
+            </div>
+
+            <div class="problem-card">
+                <div class="problem-icon">🔄</div>
+                <h3 class="problem-title">Language Variability</h3>
+                <p class="problem-description">
+                    The same fact appears in countless phrasings. Without normalization, systems cannot detect duplicates or contradictions effectively.
+                </p>
+            </div>
+
+            <div class="problem-card">
+                <div class="problem-icon">⏱️</div>
+                <h3 class="problem-title">Speed vs Accuracy</h3>
+                <p class="problem-description">
+                    Misinformation spreads faster than verification. By the time manual checks complete, false narratives have already shaped opinions.
+                </p>
+            </div>
+
+            <div class="problem-card">
+                <div class="problem-icon">🔍</div>
+                <h3 class="problem-title">Lack of Transparency</h3>
+                <p class="problem-description">
+                    Existing tools provide verdicts without showing reasoning. Journalists need transparent, auditable verification processes.
+                </p>
+            </div>
+
+            <div class="problem-card">
+                <div class="problem-icon">📊</div>
+                <h3 class="problem-title">No Cross-Comparison</h3>
+                <p class="problem-description">
+                    Claims repeat across outlets with subtle variations. Contradictions and evolving narratives go undetected until widespread.
+                </p>
+            </div>
         </div>
     </section>
 
-    <!-- Inspirational Section -->
-    <section class="inspiration-section">
-        <div class="inspiration-card">
-            <div class="inspiration-content">
-                <h2 class="inspiration-title">WHEN THINGS CHANGE</h2>
-                <h3 class="inspiration-subtitle">INSIDE YOU</h3>
-                <div class="inspiration-visual">
-                    <div class="hands-container">
-                        <div class="hand left-hand">🤝</div>
-                        <div class="heart">❤️</div>
-                        <div class="hand right-hand">🤝</div>
-                    </div>
-                    <div class="flowers">
-                        <span class="flower">🌸</span>
-                        <span class="flower">🌼</span>
-                        <span class="flower">🌺</span>
-                        <span class="flower">🌸</span>
-                    </div>
+    <!-- Solution Section -->
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">Our Intelligent Solution</h2>
+            <p class="section-subtitle">Multi-agent architecture for claim-level news verification</p>
+        </div>
+
+        <div class="architecture-flow">
+            <div class="flow-item">
+                <div class="flow-number">1</div>
+                <div class="flow-content">
+                    <h3>Text Preprocessing</h3>
+                    <p>Intelligent segmentation of raw news text, handling headlines, quotes, and newsroom-specific structures with precision.</p>
                 </div>
-                <div class="inspiration-boxes">
-                    <div class="box">THINGS</div>
-                    <div class="arrow">→</div>
-                    <div class="box">CHANGE</div>
+            </div>
+
+            <div class="flow-item">
+                <div class="flow-number">2</div>
+                <div class="flow-content">
+                    <h3>Sentence Classification</h3>
+                    <p>AI distinguishes factual claims from opinions, context, and emotional framing, filtering out noise early in the pipeline.</p>
+                </div>
+            </div>
+
+            <div class="flow-item">
+                <div class="flow-number">3</div>
+                <div class="flow-content">
+                    <h3>Claim Extraction</h3>
+                    <p>Structured extraction of subject, action, value, time, location, and source using schema-validated LLM reasoning.</p>
+                </div>
+            </div>
+
+            <div class="flow-item">
+                <div class="flow-number">4</div>
+                <div class="flow-content">
+                    <h3>Canonical Normalization</h3>
+                    <p>Deterministic conversion of claims into standardized format, ensuring identical facts are recognized across all sources.</p>
+                </div>
+            </div>
+
+            <div class="flow-item">
+                <div class="flow-number">5</div>
+                <div class="flow-content">
+                    <h3>Evidence Verification</h3>
+                    <p>Automated search and validation against external sources with confidence scoring and complete source traceability.</p>
+                </div>
+            </div>
+
+            <div class="flow-item">
+                <div class="flow-number">6</div>
+                <div class="flow-content">
+                    <h3>Analysis & Insights</h3>
+                    <p>Cross-source comparison, contradiction detection, bias identification, and narrative tracking in real-time.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Activity Timeline -->
-    <section class="activity-section">
-        <h2 class="section-title">Recent Activity</h2>
-        <div class="timeline">
-            <div class="timeline-item">
-                <div class="timeline-marker"></div>
-                <div class="timeline-content">
-                    <h4>Project Launch</h4>
-                    <p>New dashboard project initiated</p>
-                    <span class="timeline-date">2 hours ago</span>
-                </div>
+    <!-- Features Section -->
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">Powerful Features</h2>
+            <p class="section-subtitle">Enterprise-grade fact verification capabilities</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3 class="feature-title">Claim-Level Analysis</h3>
+                <p class="feature-description">
+                    Extracts and analyzes individual factual claims, the fundamental unit of journalistic verification.
+                </p>
             </div>
-            
-            <div class="timeline-item">
-                <div class="timeline-marker"></div>
-                <div class="timeline-content">
-                    <h4>Team Meeting</h4>
-                    <p>Weekly sync completed</p>
-                    <span class="timeline-date">5 hours ago</span>
-                </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <h3 class="feature-title">Smart Normalization</h3>
+                <p class="feature-description">
+                    Converts different phrasings into canonical format for reliable comparison and deduplication.
+                </p>
             </div>
-            
-            <div class="timeline-item">
-                <div class="timeline-marker"></div>
-                <div class="timeline-content">
-                    <h4>Milestone Achieved</h4>
-                    <p>Phase 1 completed successfully</p>
-                    <span class="timeline-date">1 day ago</span>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔗</div>
+                <h3 class="feature-title">Cross-Source Tracking</h3>
+                <p class="feature-description">
+                    Identifies identical claims across multiple outlets and tracks narrative evolution.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">⚖️</div>
+                <h3 class="feature-title">Contradiction Detection</h3>
+                <p class="feature-description">
+                    Automatically flags conflicting claims with differing values, timelines, or sources.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <h3 class="feature-title">Bias Analysis</h3>
+                <p class="feature-description">
+                    Highlights opinionated framing and emotional language surrounding factual claims.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📝</div>
+                <h3 class="feature-title">Complete Traceability</h3>
+                <p class="feature-description">
+                    Every claim links to original sentences with full audit trail for human review.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3 class="feature-title">Multi-Agent System</h3>
+                <p class="feature-description">
+                    Specialized AI agents handle specific tasks for reliability and explainability.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3 class="feature-title">Scalable Architecture</h3>
+                <p class="feature-description">
+                    Process thousands of articles with batch processing and intelligent caching.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-box">
+            <div class="cta-content">
+                <h2 class="cta-title">Ready to Verify the Truth?</h2>
+                <p class="cta-subtitle">Start analyzing news content with AI-powered verification today</p>
+                <div class="hero-buttons">
+                    <a href="{% url 'extract_claims' %}" class="btn btn-primary">
+                        Analyze Text Now
+                        <span>→</span>
+                    </a>
+                    <a href="{% url 'yt_analyzer' %}" class="btn btn-secondary">
+                        Try YouTube Analysis
+                    </a>
                 </div>
             </div>
         </div>
@@ -119,5 +928,115 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/dashboard.js' %}"></script>
+<script>
+    // Typing effect with multiple phrases
+    const phrases = [
+        "Extract Claims From Any News Source",
+        "Verify Facts With AI Intelligence",
+        "Detect Contradictions Across Outlets",
+        "Analyze Bias in Real-Time",
+        "Track Truth Through Misinformation"
+    ];
+    
+    let phraseIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+    let typingSpeed = 100;
+    
+    function typeEffect() {
+        const typingElement = document.getElementById('typingText');
+        const currentPhrase = phrases[phraseIndex];
+        
+        if (isDeleting) {
+            typingElement.textContent = currentPhrase.substring(0, charIndex - 1);
+            charIndex--;
+            typingSpeed = 50;
+        } else {
+            typingElement.textContent = currentPhrase.substring(0, charIndex + 1);
+            charIndex++;
+            typingSpeed = 100;
+        }
+        
+        if (!isDeleting && charIndex === currentPhrase.length) {
+            isDeleting = true;
+            typingSpeed = 2000; // Pause at end
+        } else if (isDeleting && charIndex === 0) {
+            isDeleting = false;
+            phraseIndex = (phraseIndex + 1) % phrases.length;
+            typingSpeed = 500; // Pause before next phrase
+        }
+        
+        setTimeout(typeEffect, typingSpeed);
+    }
+    
+    // Start typing effect
+    document.addEventListener('DOMContentLoaded', () => {
+        typeEffect();
+        animateCounters();
+    });
+    
+    // Animate counters
+    function animateCounters() {
+        const counters = document.querySelectorAll('.stat-number[data-count]');
+        
+        counters.forEach(counter => {
+            const target = parseInt(counter.getAttribute('data-count'));
+            let count = 0;
+            const increment = target / 100;
+            
+            const updateCount = () => {
+                if (count < target) {
+                    count += increment;
+                    counter.textContent = Math.ceil(count) + '+';
+                    setTimeout(updateCount, 20);
+                } else {
+                    counter.textContent = target + '+';
+                }
+            };
+            
+            // Start animation when element is in viewport
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    updateCount();
+                    observer.disconnect();
+                }
+            });
+            
+            observer.observe(counter);
+        });
+    }
+    
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+    
+    // Add scroll animations
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -100px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+    
+    document.querySelectorAll('.problem-card, .feature-card, .flow-item').forEach(el => {
+        observer.observe(el);
+    });
+</script>
 {% endblock %}

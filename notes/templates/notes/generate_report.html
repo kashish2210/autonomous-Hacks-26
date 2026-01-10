@@ -1,0 +1,447 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .report-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 2rem;
+    }
+    
+    .report-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    
+    .report-header h1 {
+        font-size: 2.5rem;
+        color: #1a1a1a;
+        margin-bottom: 0.5rem;
+    }
+    
+    .report-header p {
+        color: #666;
+        font-size: 1.1rem;
+    }
+    
+    .form-section {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+    
+    .format-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .format-option {
+        border: 2px solid #ddd;
+        padding: 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-align: center;
+    }
+    
+    .format-option:hover {
+        border-color: #007bff;
+        background: #f8f9fa;
+    }
+    
+    .format-option.selected {
+        border-color: #007bff;
+        background: #e7f3ff;
+    }
+    
+    .format-option input[type="radio"] {
+        display: none;
+    }
+    
+    .format-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .format-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .format-description {
+        color: #666;
+        font-size: 0.9rem;
+    }
+    
+    .claims-preview {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+    
+    .claims-preview h3 {
+        margin-bottom: 1rem;
+        color: #333;
+    }
+    
+    .claim-item {
+        background: white;
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 0.75rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .claim-item-title {
+        font-weight: 500;
+        color: #1a1a1a;
+    }
+    
+    .claim-item-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .btn-group {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    
+    .btn {
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 6px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .btn-primary {
+        background: #007bff;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #0056b3;
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background: #545b62;
+    }
+    
+    .progress-section {
+        display: none;
+        text-align: center;
+        padding: 3rem;
+    }
+    
+    .progress-section.active {
+        display: block;
+    }
+    
+    .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #007bff;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1.5rem;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .result-section {
+        display: none;
+        text-align: center;
+        padding: 3rem;
+    }
+    
+    .result-section.active {
+        display: block;
+    }
+    
+    .success-icon {
+        font-size: 4rem;
+        color: #28a745;
+        margin-bottom: 1rem;
+    }
+    
+    .veo3-note {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 1rem;
+        margin-top: 1rem;
+        border-radius: 4px;
+    }
+    
+    .veo3-note strong {
+        color: #856404;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-container">
+    <div class="report-header">
+        <h1>Generate News Report</h1>
+        <p>Create professional PDF reports or AI-generated video news from selected claims</p>
+    </div>
+    
+    <div id="formSection" class="form-section">
+        <form id="reportForm">
+            <div class="form-group">
+                <label for="reportTitle">Report Title</label>
+                <input type="text" 
+                       id="reportTitle" 
+                       class="form-control" 
+                       placeholder="Enter report title"
+                       required>
+            </div>
+            
+            <div class="form-group">
+                <label>Output Format</label>
+                <div class="format-options">
+                    <div class="format-option" onclick="selectFormat('pdf')">
+                        <input type="radio" name="format" value="pdf" id="formatPdf" checked>
+                        <div class="format-icon">📄</div>
+                        <div class="format-title">PDF Document</div>
+                        <div class="format-description">Professional formatted report for printing or sharing</div>
+                    </div>
+                    <div class="format-option" onclick="selectFormat('video')">
+                        <input type="radio" name="format" value="video" id="formatVideo">
+                        <div class="format-icon">🎬</div>
+                        <div class="format-title">AI Video (Veo 3)</div>
+                        <div class="format-description">Generate news broadcast video using Google Veo 3</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="language">Report Language</label>
+                <select id="language" class="form-control">
+                    <option value="en">English</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="hi">Hindi</option>
+                    <option value="zh">Chinese</option>
+                    <option value="ar">Arabic</option>
+                </select>
+            </div>
+            
+            <div class="claims-preview">
+                <h3>Selected Claims (<span id="claimsCount">0</span>)</h3>
+                <div id="claimsList"></div>
+            </div>
+            
+            <div class="veo3-note" id="veo3Note" style="display: none;">
+                <strong>Note:</strong> Video generation with Veo 3 may take several minutes. 
+                You will be able to download the video once processing is complete.
+            </div>
+            
+            <div class="btn-group">
+                <button type="button" class="btn btn-secondary" onclick="window.location.href='/notes/'">
+                    Cancel
+                </button>
+                <button type="submit" class="btn btn-primary" id="generateBtn">
+                    Generate Report
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <div id="progressSection" class="progress-section">
+        <div class="spinner"></div>
+        <h2 id="progressTitle">Generating Report...</h2>
+        <p id="progressMessage">Please wait while we process your request</p>
+    </div>
+    
+    <div id="resultSection" class="result-section">
+        <div class="success-icon">✓</div>
+        <h2 id="resultTitle">Report Generated Successfully</h2>
+        <p id="resultMessage"></p>
+        <div class="btn-group">
+            <button type="button" class="btn btn-primary" id="downloadBtn">
+                Download Report
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="window.location.href='/notes/'">
+                Back to Claims
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedClaims = [];
+    let currentFormat = 'pdf';
+    let reportId = null;
+    let jobId = null;
+    
+    // Load selected claims from session storage
+    document.addEventListener('DOMContentLoaded', () => {
+        const storedClaims = sessionStorage.getItem('selectedClaims');
+        if (storedClaims) {
+            selectedClaims = JSON.parse(storedClaims);
+            loadClaimDetails();
+        }
+    });
+    
+    async function loadClaimDetails() {
+        document.getElementById('claimsCount').textContent = selectedClaims.length;
+        
+        // In a real implementation, fetch claim details from API
+        // For now, just show count
+    }
+    
+    function selectFormat(format) {
+        currentFormat = format;
+        document.querySelectorAll('.format-option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+        event.currentTarget.classList.add('selected');
+        document.getElementById(`format${format.charAt(0).toUpperCase() + format.slice(1)}`).checked = true;
+        
+        // Show/hide Veo3 note
+        document.getElementById('veo3Note').style.display = format === 'video' ? 'block' : 'none';
+    }
+    
+    document.getElementById('reportForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const title = document.getElementById('reportTitle').value;
+        const language = document.getElementById('language').value;
+        const format = document.querySelector('input[name="format"]:checked').value;
+        
+        // Show progress
+        document.getElementById('formSection').style.display = 'none';
+        document.getElementById('progressSection').classList.add('active');
+        
+        if (format === 'video') {
+            document.getElementById('progressTitle').textContent = 'Generating Video with Veo 3...';
+            document.getElementById('progressMessage').textContent = 'This may take several minutes. Please do not close this page.';
+        }
+        
+        try {
+            const response = await fetch('/notes/generate-report/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    claim_ids: selectedClaims,
+                    title: title,
+                    language: language,
+                    format: format
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                reportId = data.report_id;
+                
+                if (format === 'pdf') {
+                    showResult('PDF Report Generated', 'Your report is ready for download', data.download_url);
+                } else if (format === 'video') {
+                    jobId = data.job_id;
+                    checkVideoStatus();
+                }
+            } else {
+                alert('Error: ' + data.error);
+                location.reload();
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to generate report');
+            location.reload();
+        }
+    });
+    
+    async function checkVideoStatus() {
+        const response = await fetch(`/notes/video-status/${jobId}/`);
+        const data = await response.json();
+        
+        if (data.status === 'completed') {
+            showResult('Video Generated Successfully', 'Your AI news video is ready', data.download_url);
+        } else if (data.status === 'failed') {
+            alert('Video generation failed: ' + data.error);
+            location.reload();
+        } else {
+            setTimeout(checkVideoStatus, 5000);
+        }
+    }
+    
+    function showResult(title, message, downloadUrl) {
+        document.getElementById('progressSection').classList.remove('active');
+        document.getElementById('resultSection').classList.add('active');
+        document.getElementById('resultTitle').textContent = title;
+        document.getElementById('resultMessage').textContent = message;
+        
+        document.getElementById('downloadBtn').onclick = () => {
+            window.location.href = downloadUrl;
+        };
+    }
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    // Initialize first format option
+    document.querySelector('.format-option').classList.add('selected');
+</script>
+{% endblock %}
