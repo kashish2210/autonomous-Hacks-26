@@ -1,5 +1,34 @@
 {% for claim in claims %}
+  <div class="claim-card">
+    <p><strong>Canonical Claim:</strong> {{ claim.canonical_claim }}</p>
 
-<p>{{claim.occurrences.0.original_sentence}}</p>
+    {% if claim.verification.verdict %}
+      <p><strong>Status:</strong> {{ claim.verification.verdict }}</p>
+      <p><strong>Confidence:</strong> {{ claim.verification.confidence }}</p>
+      <p><strong>Reasoning:</strong> {{ claim.verification.reasoning }}</p>
 
+      {% if claim.verification.evidence_sources %}
+        <p><strong>Evidence:</strong></p>
+        <ul>
+          {% for src in claim.verification.evidence_sources %}
+            <li>{{ src }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% else %}
+      <p><em>Pending verification</em></p>
+    {% endif %}
+
+    <details>
+      <summary>Occurrences ({{ claim.occurrences | length }})</summary>
+      <ul>
+        {% for occ in claim.occurrences %}
+          <li>
+            [Sentence {{ occ.sentence_id }}]
+            {{ occ.original_sentence }}
+          </li>
+        {% endfor %}
+      </ul>
+    </details>
+  </div>
 {% endfor %}
