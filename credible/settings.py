@@ -32,8 +32,7 @@ INSTALLED_APPS = [
     'main',
     'agents',
     'analyzer',
-    'notes',
-    'analyzer'
+    'notes'
 ]
 
 MIDDLEWARE = [
