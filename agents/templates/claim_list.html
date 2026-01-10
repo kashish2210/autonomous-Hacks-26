@@ -1,5 +1,315 @@
-{% for claim in claims %}
+{% extends 'base.html' %}
+{% load static %}
 
-<p>{{claim.occurrences.0.original_sentence}}</p>
+{% block title %}Extracted Claims - Source Analyzer{% endblock %}
 
-{% endfor %}
+{% block extra_css %}
+<style>
+    .claims-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 2rem;
+    }
+
+    .results-section {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+
+    .results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .results-header h2 {
+        color: var(--text-primary);
+        font-size: 1.8rem;
+        margin: 0;
+    }
+
+    .back-btn {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border: 2px solid var(--border-color);
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-block;
+    }
+
+    .back-btn:hover {
+        background: var(--border-color);
+        transform: translateY(-2px);
+    }
+
+    .original-text-box {
+        background: 
+            linear-gradient(90deg, rgba(200, 200, 255, 0.1) 1px, transparent 1px),
+            linear-gradient(rgba(200, 200, 255, 0.1) 1px, transparent 1px);
+        background-size: 20px 20px;
+        background-color: var(--bg-primary);
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        position: relative;
+    }
+
+    .original-text-box h3 {
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+    }
+
+    .original-text {
+        color: var(--text-secondary);
+        line-height: 1.8;
+        white-space: pre-wrap;
+        font-size: 1rem;
+    }
+
+    .claims-count {
+        display: inline-block;
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    /* Sticky Notes Styles */
+    .sticky-notes-container {
+        position: fixed;
+        right: 2rem;
+        top: 50%;
+        transform: translateY(-50%);
+        max-width: 350px;
+        max-height: 80vh;
+        overflow-y: auto;
+        z-index: 100;
+        pointer-events: none;
+    }
+
+    .sticky-note {
+        background: linear-gradient(135deg, #fef08a 0%, #fde047 100%);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-radius: 4px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        position: relative;
+        pointer-events: auto;
+        animation: slideInStick 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        transform-origin: top center;
+        opacity: 0;
+        animation-fill-mode: forwards;
+    }
+
+    @keyframes slideInStick {
+        0% {
+            opacity: 0;
+            transform: translateX(100px) rotate(10deg);
+        }
+        60% {
+            transform: translateX(-10px) rotate(-2deg);
+        }
+        100% {
+            opacity: 1;
+            transform: translateX(0) rotate(0deg);
+        }
+    }
+
+    .sticky-note:nth-child(even) {
+        animation: slideInStickAlt 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        animation-fill-mode: forwards;
+    }
+
+    @keyframes slideInStickAlt {
+        0% {
+            opacity: 0;
+            transform: translateX(100px) rotate(-10deg);
+        }
+        60% {
+            transform: translateX(-10px) rotate(2deg);
+        }
+        100% {
+            opacity: 1;
+            transform: translateX(0) rotate(0deg);
+        }
+    }
+
+    /* Red Pin */
+    .sticky-note::before {
+        content: '';
+        position: absolute;
+        top: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40px;
+        height: 16px;
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        border-radius: 2px 2px 0 0;
+        box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .sticky-note::after {
+        content: '';
+        position: absolute;
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 8px;
+        height: 8px;
+        background: radial-gradient(circle, #fee2e2 0%, #fecaca 100%);
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .claim-text {
+        color: #dc2626;
+        font-weight: 700;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        margin: 0;
+        text-align: left;
+        word-wrap: break-word;
+    }
+
+    .note-index {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background: rgba(220, 38, 38, 0.2);
+        color: #dc2626;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: bold;
+    }
+
+    /* Scroll styling */
+    .sticky-notes-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .sticky-notes-container::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 4px;
+    }
+
+    .sticky-notes-container::-webkit-scrollbar-thumb {
+        background: rgba(99, 102, 241, 0.3);
+        border-radius: 4px;
+    }
+
+    /* No claims message */
+    .no-claims {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-secondary);
+        background: rgba(239, 68, 68, 0.1);
+        border-radius: 8px;
+        border: 2px dashed rgba(239, 68, 68, 0.3);
+    }
+
+    .no-claims p {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .sticky-notes-container {
+            position: static;
+            transform: none;
+            max-width: 100%;
+            margin-top: 2rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .claims-container {
+            padding: 1rem;
+        }
+        
+        .results-section {
+            padding: 1.5rem;
+        }
+
+        .results-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="claims-container">
+    <div class="results-section">
+        <div class="results-header">
+            <h2>🎯 Extracted Claims</h2>
+            <a href="javascript:history.back()" class="back-btn">← New Analysis</a>
+        </div>
+
+        {% if claims %}
+            <div class="claims-count">
+                Found {{ claims|length }} claim{{ claims|length|pluralize }}
+            </div>
+
+            <div class="original-text-box">
+                <h3>📄 Original Text</h3>
+                <div class="original-text">{{ submitted_text }}</div>
+            </div>
+        {% else %}
+            <div class="no-claims">
+                <p>⚠️ No claims were extracted from the text. The text might be too short or doesn't contain verifiable claims.</p>
+            </div>
+            
+            {% if submitted_text %}
+            <div class="original-text-box">
+                <h3>📄 Submitted Text</h3>
+                <div class="original-text">{{ submitted_text }}</div>
+            </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<!-- Sticky Notes for Claims -->
+{% if claims %}
+<div class="sticky-notes-container" id="stickyNotesContainer">
+    {% for claim in claims %}
+    <div class="sticky-note" style="animation-delay: {{ forloop.counter0|add:0.1 }}s;">
+        <div class="note-index">{{ forloop.counter }}</div>
+        <p class="claim-text">{{ claim.occurrences.0.original_sentence }}</p>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add entrance animation on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const notes = document.querySelectorAll('.sticky-note');
+        notes.forEach((note, index) => {
+            note.style.animationDelay = `${index * 0.15}s`;
+        });
+    });
+</script>
+{% endblock %}
