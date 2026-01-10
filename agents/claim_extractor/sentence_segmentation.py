@@ -1,9 +1,12 @@
-import spacy
+import nltk
 from typing import List, Dict
-
-nlp = spacy.load("en_core_web_sm")
-
 import re
+
+# Download required NLTK data (only needs to happen once)
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt', quiet=True)
 
 NEWSROOM_MARKERS = [
     "BREAKING:",
@@ -57,22 +60,29 @@ def sentence_segmentation(text: str) -> List[Dict]:
     char_offset = 0
 
     for para_index, paragraph in enumerate(paragraphs):
-        doc = nlp(paragraph)
-
-        for sent in doc.sents:
-            sentence_text = sent.text.strip()
+        # Use NLTK's sentence tokenizer
+        sentences = nltk.sent_tokenize(paragraph)
+        
+        current_char = 0
+        for sent_text in sentences:
+            sentence_text = sent_text.strip()
 
             # Skip empty or meaningless sentences
             if not sentence_text:
                 continue
 
+            # Find the sentence's position in the paragraph
+            sent_start = paragraph.find(sentence_text, current_char)
+            sent_end = sent_start + len(sentence_text)
+            current_char = sent_end
+
             record = {
                 "sentence_id": global_sentence_id,
                 "text": sentence_text,
                 "paragraph_index": para_index,
-                "char_start": char_offset + sent.start_char,
-                "char_end": char_offset + sent.end_char,
-                "contains_quote": '"' in sentence_text or "“" in sentence_text or "”" in sentence_text,
+                "char_start": char_offset + sent_start,
+                "char_end": char_offset + sent_end,
+                "contains_quote": '"' in sentence_text or """ in sentence_text or """ in sentence_text,
             }
 
             sentence_records.append(record)
