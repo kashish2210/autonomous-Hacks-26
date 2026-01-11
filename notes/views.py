@@ -16,7 +16,11 @@ from .services.veo3_generator import generate_video_with_veo3
 @ensure_csrf_cookie
 def notes_list(request):
     """Display all claims with search and filter"""
-    claims = Claim.objects.filter(is_archived=False)
+    # Show all non-archived claims (regardless of created_by for now)
+    claims = Claim.objects.filter(is_archived=False).order_by('-created_at')
+    
+    print(f"📋 Total claims in database: {Claim.objects.count()}")
+    print(f"📋 Non-archived claims: {claims.count()}")
     
     # Search functionality
     search_query = request.GET.get('search', '')
@@ -36,6 +40,8 @@ def notes_list(request):
     language_filter = request.GET.get('language', '')
     if language_filter:
         claims = claims.filter(language=language_filter)
+    
+    print(f"📋 Claims after filters: {claims.count()}")
     
     # Pagination
     paginator = Paginator(claims, 20)
@@ -217,21 +223,46 @@ def generate_report(request):
                 })
                 
             elif format_type == 'video':
+                # Verify we have claims
+                if claims.count() == 0:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'No claims available for video generation'
+                    }, status=400)
+                
                 # Generate video with Veo 3
+                print(f"🎬 Creating video generation job for report: {title}")
+                print(f"   Claims: {claims.count()}")
+                print(f"   Language: {language}")
+                
                 job = VideoGenerationJob.objects.create(
                     report=report,
-                    status='pending'
+                    status='processing'
                 )
                 
-                # Start async video generation
-                generate_video_with_veo3.delay(report.id, job.id)
-                
-                return JsonResponse({
-                    'success': True,
-                    'report_id': report.id,
-                    'job_id': job.id,
-                    'message': 'Video generation started'
-                })
+                try:
+                    # Generate video synchronously for better error handling
+                    result = generate_video_with_veo3(report.id, job.id)
+                    
+                    print(f"✅ Video generation job {job.id} completed")
+                    
+                    return JsonResponse({
+                        'success': True,
+                        'report_id': report.id,
+                        'job_id': job.id,
+                        'message': 'Video generated successfully',
+                        'download_url': f'/notes/download-report/{report.id}/?format=video'
+                    })
+                except Exception as e:
+                    print(f"❌ Video generation failed: {str(e)}")
+                    job.status = 'failed'
+                    job.error_message = str(e)
+                    job.save()
+                    
+                    return JsonResponse({
+                        'success': False,
+                        'error': f'Video generation failed: {str(e)}'
+                    }, status=500)
             
         except Exception as e:
             return JsonResponse({
@@ -252,31 +283,45 @@ def check_video_status(request, job_id):
         'created_at': job.created_at.isoformat(),
     }
     
-    if job.status == 'completed' and job.report.video_file:
-        response_data['download_url'] = job.report.video_file.url
+    if job.status == 'completed':
+        # Video is ready for download (either file or production plan)
+        response_data['download_url'] = f'/notes/download-report/{job.report.id}/?format=video'
+        response_data['message'] = 'Video production plan is ready for download'
     elif job.status == 'failed':
-        response_data['error'] = job.error_message
+        response_data['error'] = job.error_message or 'Unknown error occurred'
+    elif job.status == 'processing':
+        response_data['message'] = 'Video generation in progress...'
     
     return JsonResponse(response_data)
-
-
-@require_http_methods(["GET"])
 def download_report(request, report_id):
-    """Download generated report"""
+    """Download generated report (PDF, Video, or Production Plan)"""
     report = get_object_or_404(NewsReport, id=report_id)
+    download_format = request.GET.get('format', report.format_type)
     
-    if report.format_type == 'pdf' and report.pdf_file:
+    if download_format == 'pdf' and report.pdf_file:
         return FileResponse(
             report.pdf_file.open('rb'),
             as_attachment=True,
             filename=f"{report.title}.pdf"
         )
-    elif report.format_type == 'video' and report.video_file:
-        return FileResponse(
-            report.video_file.open('rb'),
-            as_attachment=True,
-            filename=f"{report.title}.mp4"
-        )
+    elif download_format == 'video':
+        if report.video_file:
+            # Download actual video file
+            return FileResponse(
+                report.video_file.open('rb'),
+                as_attachment=True,
+                filename=f"{report.title}.mp4"
+            )
+        elif report.content:
+            # Download video production plan as text file
+            from django.http import HttpResponse
+            response = HttpResponse(report.content, content_type='text/plain; charset=utf-8')
+            response['Content-Disposition'] = f'attachment; filename="{report.title}_production_plan.txt"'
+            return response
+        else:
+            return JsonResponse({
+                'error': 'No video file or production plan available'
+            }, status=404)
     
     return JsonResponse({
         'error': 'File not available'

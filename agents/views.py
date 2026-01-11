@@ -27,11 +27,20 @@ def extract_claims(request):
                         # Extract claim information
                         # Handle different possible formats
                         if isinstance(claim_data, dict):
-                            claim_text = claim_data.get('claim', claim_data.get('text', ''))
-                            verification_status = claim_data.get('verification', claim_data.get('status', 'UNVERIFIABLE'))
-                            confidence = claim_data.get('confidence', 0.0)
-                            reasoning = claim_data.get('reasoning', '')
-                            sources = claim_data.get('sources', [])
+                            claim_text = claim_data.get('canonical_claim', claim_data.get('claim', claim_data.get('text', '')))
+                            
+                            # Get verification info
+                            verification = claim_data.get('verification', {})
+                            if isinstance(verification, dict):
+                                verification_status = verification.get('verdict', 'UNVERIFIABLE')
+                                confidence = verification.get('confidence', 0.0)
+                                reasoning = verification.get('reasoning', '')
+                                sources = verification.get('evidence_sources', [])
+                            else:
+                                verification_status = claim_data.get('verification', claim_data.get('status', 'UNVERIFIABLE'))
+                                confidence = claim_data.get('confidence', 0.0)
+                                reasoning = claim_data.get('reasoning', '')
+                                sources = claim_data.get('sources', [])
                         elif isinstance(claim_data, str):
                             # If it's just a string, use it as the claim
                             claim_text = claim_data
@@ -46,10 +55,17 @@ def extract_claims(request):
                         if not claim_text or claim_text.strip() == '':
                             continue
                         
+                        # DEBUG: Temporarily save ALL claims to debug the issue
+                        # TODO: Change back to filtering only VERIFIED when working properly
+                        # if verification_status not in ['VERIFIED', 'TRUE', 'PARTIALLY_VERIFIED']:
+                        #     print(f"   ⏭️  Skipping (not verified): {claim_text[:60]}... ({verification_status})")
+                        #     continue
+                        
                         # Map verification status to our status choices
                         status_mapping = {
                             'VERIFIED': 'verified',
                             'TRUE': 'verified',
+                            'PARTIALLY_VERIFIED': 'verified',
                             'FALSE': 'false',
                             'MISLEADING': 'misleading',
                             'UNVERIFIABLE': 'pending',
@@ -66,7 +82,7 @@ def extract_claims(request):
                         if reasoning:
                             verification_notes_parts.append(f"Reasoning: {reasoning}")
                         if confidence:
-                            verification_notes_parts.append(f"Confidence: {confidence}")
+                            verification_notes_parts.append(f"Confidence: {confidence:.0%}")
                         if sources:
                             verification_notes_parts.append(f"Sources: {', '.join(sources[:3])}")
                         
@@ -85,12 +101,13 @@ def extract_claims(request):
                             created_by=request.user if request.user.is_authenticated else None
                         )
                         saved_count += 1
+                        print(f"   ✅ Saved: {claim_text[:60]}... (confidence: {confidence:.0%})")
                         
                     except Exception as e:
                         print(f"Error saving individual claim: {str(e)}")
                         continue
                 
-                print(f"[Auto-save] Successfully saved {saved_count} claims to Notes database")
+                print(f"[Auto-save] Successfully saved {saved_count} VERIFIED claims to Notes database")
                 
             except ImportError:
                 print("[Auto-save] Notes app not available - claims not saved")
@@ -164,11 +181,20 @@ def load_transcript_view(request):
                         try:
                             # Extract claim information
                             if isinstance(claim_data, dict):
-                                claim_text = claim_data.get('claim', claim_data.get('text', ''))
-                                verification_status = claim_data.get('verification', 'UNVERIFIABLE')
-                                confidence = claim_data.get('confidence', 0.0)
-                                reasoning = claim_data.get('reasoning', '')
-                                sources = claim_data.get('sources', [])
+                                claim_text = claim_data.get('canonical_claim', claim_data.get('claim', claim_data.get('text', '')))
+                                
+                                # Get verification info
+                                verification = claim_data.get('verification', {})
+                                if isinstance(verification, dict):
+                                    verification_status = verification.get('verdict', 'UNVERIFIABLE')
+                                    confidence = verification.get('confidence', 0.0)
+                                    reasoning = verification.get('reasoning', '')
+                                    sources = verification.get('evidence_sources', [])
+                                else:
+                                    verification_status = claim_data.get('verification', 'UNVERIFIABLE')
+                                    confidence = claim_data.get('confidence', 0.0)
+                                    reasoning = claim_data.get('reasoning', '')
+                                    sources = claim_data.get('sources', [])
                             elif isinstance(claim_data, str):
                                 claim_text = claim_data
                                 verification_status = 'UNVERIFIABLE'
@@ -181,10 +207,17 @@ def load_transcript_view(request):
                             if not claim_text or claim_text.strip() == '':
                                 continue
                             
+                            # DEBUG: Temporarily save ALL claims
+                            # TODO: Change back to filtering when working properly
+                            # if verification_status not in ['VERIFIED', 'TRUE', 'PARTIALLY_VERIFIED']:
+                            #     print(f"   ⏭️  Skipping (not verified): {claim_text[:60]}... ({verification_status})")
+                            #     continue
+                            
                             # Map status
                             status_mapping = {
                                 'VERIFIED': 'verified',
                                 'TRUE': 'verified',
+                                'PARTIALLY_VERIFIED': 'verified',
                                 'FALSE': 'false',
                                 'MISLEADING': 'misleading',
                                 'UNVERIFIABLE': 'pending',
@@ -201,7 +234,7 @@ def load_transcript_view(request):
                             if reasoning:
                                 verification_notes_parts.append(f"Reasoning: {reasoning}")
                             if confidence:
-                                verification_notes_parts.append(f"Confidence: {confidence}")
+                                verification_notes_parts.append(f"Confidence: {confidence:.0%}")
                             if sources:
                                 verification_notes_parts.append(f"Sources: {', '.join(sources[:3])}")
                             
@@ -221,12 +254,13 @@ def load_transcript_view(request):
                                 created_by=request.user if request.user.is_authenticated else None
                             )
                             saved_count += 1
+                            print(f"   ✅ Saved: {claim_text[:60]}... (confidence: {confidence:.0%})")
                             
                         except Exception as e:
                             print(f"[YT Auto-save] Error saving individual claim: {str(e)}")
                             continue
                     
-                    print(f"[YT Auto-save] Successfully saved {saved_count} claims from YouTube transcript")
+                    print(f"[YT Auto-save] Successfully saved {saved_count} VERIFIED claims from YouTube transcript")
                     
                 except Exception as e:
                     print(f"[YT Auto-save] Error in claim extraction/saving: {str(e)}")

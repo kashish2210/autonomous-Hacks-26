@@ -69,27 +69,34 @@ class SearchWrapper:
         # Parse the structured claim
         claim_parts = self.extract_claim_parts(query)
         
-        # Strategy 1: Topic + key claim words + entity
-        if claim_parts['topic'] and claim_parts['claim']:
-            key_words = [w for w in claim_parts['claim'].split() if len(w) > 4][:4]
-            if claim_parts['entity']:
-                queries.append(f"{claim_parts['topic']} {' '.join(key_words)} {claim_parts['entity']}")
-            else:
-                queries.append(f"{claim_parts['topic']} {' '.join(key_words)}")
-        
-        # Strategy 2: Entity + claim (if entity exists)
-        if claim_parts['entity'] and claim_parts['claim']:
-            queries.append(f"{claim_parts['entity']} {claim_parts['claim']}")
-        
-        # Strategy 3: Topic + claim
-        if claim_parts['topic'] and claim_parts['claim']:
-            queries.append(f"{claim_parts['topic']} {claim_parts['claim']}")
-        
-        # Strategy 4: Just the claim text
+        # The claim text is the MOST IMPORTANT - it should be the primary search term
         if claim_parts['claim']:
+            # Strategy 1: Entity + action + claim (most specific)
+            if claim_parts['entity'] and claim_parts['action']:
+                # "earth atmosphere" + "compose" + "nitrogen oxygen" 
+                action_clean = claim_parts['action'].replace('-', ' ')
+                queries.append(f"{claim_parts['entity']} {action_clean} {claim_parts['claim']}")
+            
+            # Strategy 2: Just claim text (most direct)
             queries.append(claim_parts['claim'])
+            
+            # Strategy 3: Claim + topic
+            if claim_parts['topic']:
+                queries.append(f"{claim_parts['claim']} {claim_parts['topic']}")
+            
+            # Strategy 4: Entity + claim
+            if claim_parts['entity']:
+                queries.append(f"{claim_parts['entity']} {claim_parts['claim']}")
         
-        # Strategy 5: Clean the original query as fallback
+        # Strategy 5: Topic + entity + action
+        if claim_parts['topic'] and claim_parts['entity']:
+            queries.append(f"{claim_parts['entity']} {claim_parts['topic']}")
+        
+        # Strategy 6: Just entity if we have it
+        if claim_parts['entity']:
+            queries.append(claim_parts['entity'])
+        
+        # Clean the original query as fallback
         cleaned = query.replace('|', ' ').replace('_', ' ')
         cleaned = ' '.join([w for w in cleaned.split() if w.lower() != 'null' and len(w) > 2])
         if cleaned and cleaned not in queries:
@@ -104,6 +111,7 @@ class SearchWrapper:
                 seen.add(q_lower)
                 unique_queries.append(q)
         
+        print(f"   🔍 Search strategies: {unique_queries[:3]}")
         return unique_queries[:3]  # Return top 3 strategies
 
     def is_english_result(self, result):
@@ -297,7 +305,9 @@ class SearchWrapper:
             
             formatted_output.append(f"{i}. {title}\n   {snippet}\n   URL: {link}")
         
-        return "\n\n".join(formatted_output)
+        output = "\n\n".join(formatted_output)
+        print(f"   📄 Formatted results: {len(output)} chars from {len(results)} sources")
+        return output
 
     def results(self, query):
         """Returns structured results (for compatibility)"""
